@@ -227,10 +227,31 @@ const ContactsPage = () => {
 			<section className='py-10 bg-neutral-50'>
 				<div className='container mx-auto px-4 text-center'>
 					<h2 className='text-2xl font-bold mb-8'>Расположение на карте</h2>
-					<div className='aspect-video bg-neutral-200 rounded-lg overflow-hidden'>
-						{/* Здесь будет карта Google Maps или аналогичный сервис */}
-						<div className='w-full h-full flex items-center justify-center'>
-							<p className='text-neutral-600'>Карта будет добавлена позже</p>
+					<div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+						<div>
+							<h3 className='text-xl font-medium mb-4'>Головной офис</h3>
+							<div
+								className='aspect-video rounded-lg overflow-hidden'
+								dangerouslySetInnerHTML={{
+									__html: `<div style="font:normal normal 400 12px/normal dotum, sans-serif; width:100%; height:392px; color:#333; position:relative"><div style="height: 360px;"><a href="https://map.kakao.com/?urlX=510630.9999999991&amp;urlY=915816.9999999984&amp;name=%EC%B6%A9%EB%82%A8%20%EC%95%84%EC%82%B0%EC%8B%9C%20%ED%83%95%EC%A0%95%EB%A9%B4%20%EC%9A%A9%EB%91%90%EB%A6%AC%20695&amp;map_type=TYPE_MAP&amp;from=roughmap" target="_blank"><img class="map" src="http://t1.daumcdn.net/roughmap/imgmap/9acbeb2b080b862684c8f286b90b6bcfa0a4a49d531822f03b220a1ad71371c7" width="100%" height="358px" style="border:1px solid #ccc;"></a></div><div style="overflow: hidden; padding: 7px 11px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0px 0px 2px 2px; background-color: rgb(249, 249, 249);"><a href="https://map.kakao.com" target="_blank" style="float: left;"><img src="//t1.daumcdn.net/localimg/localimages/07/2018/pc/common/logo_kakaomap.png" width="72" height="16" alt="카카오맵" style="display:block;width:72px;height:16px"></a><div style="float: right; position: relative; top: 1px; font-size: 11px;"><a target="_blank" href="https://map.kakao.com/?from=roughmap&amp;srcid=&amp;confirmid=&amp;q=%EC%B6%A9%EB%82%A8%20%EC%95%84%EC%82%B0%EC%8B%9C%20%ED%83%95%EC%A0%95%EB%A9%B4%20%EC%9A%A9%EB%91%90%EB%A6%AC%20695&amp;rv=on" style="float:left;height:15px;padding-top:1px;line-height:15px;color:#000;text-decoration: none;">로드뷰</a><span style="width: 1px;padding: 0;margin: 0 8px 0 9px;height: 11px;vertical-align: top;position: relative;top: 2px;border-left: 1px solid #d0d0d0;float: left;"></span><a target="_blank" href="https://map.kakao.com/?from=roughmap&amp;eName=%EC%B6%A9%EB%82%A8%20%EC%95%84%EC%82%B0%EC%8B%9C%20%ED%83%95%EC%A0%95%EB%A9%B4%20%EC%9A%A9%EB%91%90%EB%A6%AC%20695&amp;eX=510630.9999999991&amp;eY=915816.9999999984" style="float:left;height:15px;padding-top:1px;line-height:15px;color:#000;text-decoration: none;">길찾기</a></div></div></div>`,
+								}}
+							/>
+							<p className='mt-2 text-sm text-neutral-600'>
+								충남 아산시 탕정면 용두리 695
+							</p>
+						</div>
+
+						<div>
+							<h3 className='text-xl font-medium mb-4'>Филиал</h3>
+							<div
+								className='aspect-video rounded-lg overflow-hidden'
+								dangerouslySetInnerHTML={{
+									__html: `<div style="font:normal normal 400 12px/normal dotum, sans-serif; width:100%; height:392px; color:#333; position:relative"><div style="height: 360px;"><a href="https://map.kakao.com/?urlX=509842.00000000215&amp;urlY=951888.9999999979&amp;name=%EC%B6%A9%EB%82%A8%20%EC%95%84%EC%82%B0%EC%8B%9C%20%EB%91%94%ED%8F%AC%EB%A9%B4%20%EB%91%94%ED%8F%AC%EB%A1%9C%2092-1&amp;map_type=TYPE_MAP&amp;from=roughmap" target="_blank"><img class="map" src="http://t1.daumcdn.net/roughmap/imgmap/d56e4b18d1639f24c988090c8d415d923cc8e1585da7923876bf6e46fe8f1efa" width="100%" height="358px" style="border:1px solid #ccc;"></a></div><div style="overflow: hidden; padding: 7px 11px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 0px 0px 2px 2px; background-color: rgb(249, 249, 249);"><a href="https://map.kakao.com" target="_blank" style="float: left;"><img src="//t1.daumcdn.net/localimg/localimages/07/2018/pc/common/logo_kakaomap.png" width="72" height="16" alt="카카오맵" style="display:block;width:72px;height:16px"></a><div style="float: right; position: relative; top: 1px; font-size: 11px;"><a target="_blank" href="https://map.kakao.com/?from=roughmap&amp;srcid=&amp;confirmid=&amp;q=%EC%B6%A9%EB%82%A8%20%EC%95%84%EC%82%B0%EC%8B%9C%20%EB%91%94%ED%8F%AC%EB%A9%B4%20%EB%91%94%ED%8F%AC%EB%A1%9C%2092-1&amp;rv=on" style="float:left;height:15px;padding-top:1px;line-height:15px;color:#000;text-decoration: none;">로드뷰</a><span style="width: 1px;padding: 0;margin: 0 8px 0 9px;height: 11px;vertical-align: top;position: relative;top: 2px;border-left: 1px solid #d0d0d0;float: left;"></span><a target="_blank" href="https://map.kakao.com/?from=roughmap&amp;eName=%EC%B6%A9%EB%82%A8%20%EC%95%84%EC%82%B0%EC%8B%9C%20%EB%91%94%ED%8F%AC%EB%A9%B4%20%EB%91%94%ED%8F%AC%EB%A1%9C%2092-1&amp;eX=509842.00000000215&amp;eY=951888.9999999979" style="float:left;height:15px;padding-top:1px;line-height:15px;color:#000;text-decoration: none;">길찾기</a></div></div></div>`,
+								}}
+							/>
+							<p className='mt-2 text-sm text-neutral-600'>
+								충남 아산시 둔포면 둔포로 92-1
+							</p>
 						</div>
 					</div>
 				</div>

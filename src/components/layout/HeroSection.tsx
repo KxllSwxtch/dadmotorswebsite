@@ -265,7 +265,7 @@ const HeroSection = () => {
 								}}
 							>
 								<motion.button
-									className='bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors w-full'
+									className='bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors w-full cursor-pointer'
 									whileHover={{ scale: 1.05 }}
 									whileTap={{ scale: 0.95 }}
 								>
