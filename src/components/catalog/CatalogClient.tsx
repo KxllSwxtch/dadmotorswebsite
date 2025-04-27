@@ -379,8 +379,8 @@ const CatalogClient = () => {
 		setLoading(true)
 		setError('')
 
-		let queryParts = []
-		let filters = []
+		const queryParts = []
+		const filters = []
 
 		if (searchByNumber) {
 			queryParts.push(
@@ -465,7 +465,7 @@ const CatalogClient = () => {
 			filters.push(`Price.range(..${priceEnd}).`)
 		}
 
-		let query =
+		const query =
 			queryParts.join('') +
 			(filters.length ? `_.${filters.join('_.')}` : '') +
 			')'
