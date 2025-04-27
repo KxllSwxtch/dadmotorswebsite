@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 const Header = () => {
 	const [isScrolled, setIsScrolled] = useState(false)
 	const [isMenuOpen, setIsMenuOpen] = useState(false)
+	const [pathName, setPathName] = useState('/')
 
 	useEffect(() => {
 		const handleScroll = () => {
@@ -27,6 +28,10 @@ const Header = () => {
 
 		window.addEventListener('scroll', handleScroll)
 		return () => window.removeEventListener('scroll', handleScroll)
+	}, [])
+
+	useEffect(() => {
+		setPathName(window.location.pathname)
 	}, [])
 
 	const closeMenu = () => setIsMenuOpen(false)
@@ -71,32 +76,48 @@ const Header = () => {
 						{/* Actions */}
 						<div className='flex items-center space-x-6'>
 							{/* Desktop Navigation - visible on md and up */}
-							<nav className='hidden md:flex items-center space-x-8'>
-								{['Главная', 'О нас', 'Каталог', 'Контакты'].map(
-									(item, idx) => (
-										<Link
-											key={idx}
-											href={
-												idx === 0
-													? '/'
-													: idx === 1
-													? '/about'
-													: idx === 2
-													? '/catalog'
-													: '/contacts'
-											}
-											className={cn(
-												'font-medium transition-colors',
-												isScrolled
-													? 'text-neutral-800 hover:text-red-600'
-													: 'text-white hover:text-red-500',
-											)}
-										>
-											{item}
-										</Link>
-									),
-								)}
-							</nav>
+							<div className='hidden md:flex md:gap-x-10'>
+								<Link
+									href='/'
+									className={`text-md font-medium ${
+										pathName === '/'
+											? 'text-red-600'
+											: 'text-gray-500 hover:text-gray-900'
+									}`}
+								>
+									Главная
+								</Link>
+								<Link
+									href='/catalog'
+									className={`text-md font-medium ${
+										pathName === '/catalog' || pathName.startsWith('/car/')
+											? 'text-red-600'
+											: 'text-gray-500 hover:text-gray-900'
+									}`}
+								>
+									Каталог
+								</Link>
+								<Link
+									href='/about'
+									className={`text-md font-medium ${
+										pathName === '/about'
+											? 'text-red-600'
+											: 'text-gray-500 hover:text-gray-900'
+									}`}
+								>
+									О нас
+								</Link>
+								<Link
+									href='/contacts'
+									className={`text-md font-medium ${
+										pathName === '/contacts'
+											? 'text-red-600'
+											: 'text-gray-500 hover:text-gray-900'
+									}`}
+								>
+									Контакты
+								</Link>
+							</div>
 
 							{/* Mobile menu button */}
 							<Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>

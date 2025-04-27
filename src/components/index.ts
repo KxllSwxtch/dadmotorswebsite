@@ -1,3 +1,2 @@
-import Loader from './Loader'
-
-export { Loader }
+export { default as Loader } from './Loader'
+export { default as CarInspection } from './CarInspection'

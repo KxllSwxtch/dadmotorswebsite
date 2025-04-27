@@ -124,7 +124,7 @@ const ContactsPage = () => {
 											+82 10-8233-6313
 										</a>
 										<CardDescription className='mt-2'>
-											Менеджер: Сон Денис Олегович
+											Сон Денис Олегович
 										</CardDescription>
 									</CardContent>
 								</Card>
