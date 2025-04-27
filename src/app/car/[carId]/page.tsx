@@ -421,7 +421,7 @@ export default function CarDetailPage({
 								thumbs={{ swiper: thumbsSwiper }}
 								className='rounded-lg shadow-lg mb-4'
 							>
-								{uniquePhotos.map((photo: unknown, index: number) => (
+								{uniquePhotos.map((photo: { path: string }, index: number) => (
 									<SwiperSlide key={index}>
 										<img
 											src={getPhotoUrl(photo.path)}
@@ -440,7 +440,7 @@ export default function CarDetailPage({
 								watchSlidesProgress={true}
 								className='cursor-pointer'
 							>
-								{uniquePhotos.map((photo: unknown, index: number) => (
+								{uniquePhotos.map((photo: { path: string }, index: number) => (
 									<SwiperSlide key={index}>
 										<img
 											src={getPhotoUrl(photo.path)}
