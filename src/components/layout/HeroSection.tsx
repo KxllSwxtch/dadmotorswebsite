@@ -3,12 +3,11 @@
 import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { Slider } from '@/components/ui/slider'
-import { motion, useInView } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 const HeroSection = () => {
 	const [priceRange, setPriceRange] = useState<number[]>([7900, 2599100])
 	const sectionRef = useRef(null)
-	const isInView = useInView(sectionRef, { once: true })
 
 	const handlePriceRangeChange = (value: number[]) => {
 		setPriceRange(value)

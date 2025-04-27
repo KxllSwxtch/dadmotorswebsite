@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 interface CarInspectionProps {
-	car: any
+	car: unknown
 }
 
 const CarInspection = ({ car }: CarInspectionProps) => {

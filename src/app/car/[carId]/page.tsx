@@ -176,17 +176,6 @@ interface InspectionData {
 	}
 }
 
-interface CalculationResultKZ {
-	// Define the structure if needed
-	[key: string]: any
-}
-
-interface SwiperInstance extends SwiperClass {}
-
-interface CarDetailPageProps {
-	params: { carId: string }
-}
-
 export default function CarDetailPage({
 	params,
 }: {
@@ -196,8 +185,6 @@ export default function CarDetailPage({
 	const [inspectionData, setInspectionData] = useState<InspectionData | null>(
 		null,
 	)
-	const [activeTab, setActiveTab] = useState('description')
-	const [activeSlide, setActiveSlide] = useState(0)
 	const [thumbsSwiper, setThumbsSwiper] = useState<SwiperClass | null>(null)
 
 	const [usdKrwRate, setUsdKrwRate] = useState<number | null>(null)
@@ -382,7 +369,7 @@ export default function CarDetailPage({
 				totalCarWithLogisticsUsd,
 				totalCarWithLogisticsUsdt,
 			})
-		} catch (err: any) {
+		} catch (err: unknown) {
 			const errorMessage =
 				err instanceof Error ? err.message : 'Ошибка при расчёте'
 			setErrorCalc(errorMessage)
@@ -434,7 +421,7 @@ export default function CarDetailPage({
 								thumbs={{ swiper: thumbsSwiper }}
 								className='rounded-lg shadow-lg mb-4'
 							>
-								{uniquePhotos.map((photo: any, index: number) => (
+								{uniquePhotos.map((photo: unknown, index: number) => (
 									<SwiperSlide key={index}>
 										<img
 											src={getPhotoUrl(photo.path)}
@@ -453,7 +440,7 @@ export default function CarDetailPage({
 								watchSlidesProgress={true}
 								className='cursor-pointer'
 							>
-								{uniquePhotos.map((photo: any, index: number) => (
+								{uniquePhotos.map((photo: unknown, index: number) => (
 									<SwiperSlide key={index}>
 										<img
 											src={getPhotoUrl(photo.path)}
