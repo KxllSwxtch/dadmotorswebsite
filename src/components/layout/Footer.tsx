@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Facebook, Instagram, Youtube } from 'lucide-react'
+import { Facebook, Instagram, Send, Youtube } from 'lucide-react'
 
 const socialLinks = [
 	{
@@ -11,24 +11,7 @@ const socialLinks = [
 	{
 		name: 'Telegram',
 		href: 'https://t.me/dadmotorskr',
-		icon: () => (
-			<svg
-				xmlns='http://www.w3.org/2000/svg'
-				width='24'
-				height='24'
-				viewBox='0 0 24 24'
-				fill='none'
-				stroke='currentColor'
-				strokeWidth='2'
-				strokeLinecap='round'
-				strokeLinejoin='round'
-				className='lucide'
-			>
-				<path d='M21.73 2.27a2 2 0 0 0-2.83 0L2.27 18.9a2 2 0 0 0 0 2.83 2 2 0 0 0 2.83 0L21.73 5.1a2 2 0 0 0 0-2.83Z' />
-				<path d='M8.5 8.5 7 15l6.5-6.5' />
-				<path d='M14 14v7h7' />
-			</svg>
-		),
+		icon: Send,
 	},
 	{
 		name: 'Facebook',

@@ -18,6 +18,7 @@ import {
 	Instagram,
 	Facebook,
 	Youtube,
+	Send,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 
 const ContactsPage = () => {
 	return (
-		<div className='flex flex-col min-h-screen'>
+		<div className='flex flex-col min-h-screen pt-15'>
 			{/* Hero Section */}
 			<section className='relative py-20 bg-neutral-900 text-white'>
 				<div className='absolute inset-0 z-0'>
@@ -193,22 +194,7 @@ const ContactsPage = () => {
 												className='p-2 rounded-full bg-neutral-100 hover:bg-red-100 transition-colors'
 												aria-label='Telegram'
 											>
-												<svg
-													xmlns='http://www.w3.org/2000/svg'
-													width='20'
-													height='20'
-													viewBox='0 0 24 24'
-													fill='none'
-													stroke='currentColor'
-													strokeWidth='2'
-													strokeLinecap='round'
-													strokeLinejoin='round'
-													className='lucide text-red-600'
-												>
-													<path d='M21.73 2.27a2 2 0 0 0-2.83 0L2.27 18.9a2 2 0 0 0 0 2.83 2 2 0 0 0 2.83 0L21.73 5.1a2 2 0 0 0 0-2.83Z' />
-													<path d='M8.5 8.5 7 15l6.5-6.5' />
-													<path d='M14 14v7h7' />
-												</svg>
+												<Send className='h-5 w-5 text-red-600' />
 											</a>
 											<a
 												href='https://www.facebook.com/share/1AdFZpXoN7/?mibextid=wwXIfr'

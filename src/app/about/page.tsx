@@ -11,12 +11,12 @@ export const metadata = {
 
 export default function AboutPage() {
 	return (
-		<div className='flex flex-col min-h-screen'>
+		<div className='flex flex-col min-h-screen pt-15'>
 			{/* Hero Section */}
 			<section className='relative py-20 bg-neutral-900 text-white'>
 				<div className='absolute inset-0 z-0'>
 					<Image
-						src='https://images.unsplash.com/photo-1626072778577-21d9f8316e9d?q=80&w=1974&auto=format&fit=crop'
+						src='/images/palisade.png'
 						alt='Команда D.A.D Motors'
 						fill
 						className='object-cover opacity-30'
@@ -66,7 +66,7 @@ export default function AboutPage() {
 						</div>
 						<div className='relative h-80 md:h-96 rounded-lg overflow-hidden'>
 							<Image
-								src='https://images.unsplash.com/photo-1586803845085-a038d8bc2255?q=80&w=1974&auto=format&fit=crop'
+								src='/images/palisade.png'
 								alt='Автомобиль из Южной Кореи'
 								fill
 								className='object-cover'
@@ -157,14 +157,6 @@ export default function AboutPage() {
 							<address className='text-neutral-600 not-italic mb-4'>
 								충남 아산시 탕정면 용두리 695
 							</address>
-							<div className='aspect-video relative rounded-lg overflow-hidden'>
-								<Image
-									src='https://images.unsplash.com/photo-1551816230-ef5d99548868?q=80&w=1965&auto=format&fit=crop'
-									alt='Головной офис D.A.D Motors'
-									fill
-									className='object-cover'
-								/>
-							</div>
 						</div>
 
 						<div className='bg-neutral-50 p-6 rounded-lg'>
@@ -175,14 +167,6 @@ export default function AboutPage() {
 							<address className='text-neutral-600 not-italic mb-4'>
 								충남 아산시 둔포면 둔포로 92-1
 							</address>
-							<div className='aspect-video relative rounded-lg overflow-hidden'>
-								<Image
-									src='https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1969&auto=format&fit=crop'
-									alt='Филиал D.A.D Motors'
-									fill
-									className='object-cover'
-								/>
-							</div>
 						</div>
 					</div>
 				</div>
@@ -210,7 +194,7 @@ export default function AboutPage() {
 							asChild
 							size='lg'
 							variant='outline'
-							className='text-white border-white hover:bg-white/10'
+							className='text-black border-white'
 						>
 							<Link href='/contacts'>Связаться с нами</Link>
 						</Button>

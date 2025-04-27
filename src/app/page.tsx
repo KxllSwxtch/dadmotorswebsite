@@ -8,53 +8,16 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { ChevronRight, Car, Building2, Shield, Globe } from 'lucide-react'
+import HeroSection from '@/components/layout/HeroSection'
 
 export default function Home() {
 	return (
 		<div className='flex flex-col min-h-screen'>
 			{/* Hero Section */}
-			<section className='relative h-[80vh] flex items-center justify-center bg-neutral-900 text-white overflow-hidden'>
-				<div className='absolute inset-0 z-0'>
-					<Image
-						src='https://images.unsplash.com/photo-1590213845463-c96fa7de3ba7?q=80&w=2070&auto=format&fit=crop'
-						alt='Автомобили из Южной Кореи'
-						fill
-						priority
-						className='object-cover opacity-50'
-					/>
-					<div className='absolute inset-0 bg-gradient-to-b from-neutral-900/70 to-neutral-900/90' />
-				</div>
-
-				<div className='container mx-auto px-4 relative z-10 text-center'>
-					<h1 className='text-4xl md:text-6xl font-bold mb-6'>
-						Автомобили из Южной Кореи
-					</h1>
-					<p className='text-xl md:text-2xl mb-8 max-w-3xl mx-auto'>
-						D.A.D Motors — ваш надежный партнер в экспорте качественных
-						автомобилей из Южной Кореи по выгодным ценам.
-					</p>
-					<div className='flex flex-col sm:flex-row gap-4 justify-center'>
-						<Button
-							asChild
-							size='lg'
-							className='bg-red-600 hover:bg-red-700 text-white'
-						>
-							<Link href='/catalog'>Перейти в каталог</Link>
-						</Button>
-						<Button
-							asChild
-							size='lg'
-							variant='outline'
-							className='text-white border-white hover:bg-white/10'
-						>
-							<Link href='/contacts'>Связаться с нами</Link>
-						</Button>
-					</div>
-				</div>
-			</section>
+			<HeroSection />
 
 			{/* About Section */}
-			<section className='py-20 bg-white'>
+			<section className='pt-90 pb-20 md:py-40 bg-white'>
 				<div className='container mx-auto px-4'>
 					<div className='text-center mb-16'>
 						<h2 className='text-3xl md:text-4xl font-bold mb-4'>
