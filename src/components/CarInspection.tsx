@@ -10,6 +10,9 @@ interface CarInspectionProps {
 			inspectionType: string
 			totalScore: number
 			exteriorScore: number
+			interiorScore: number
+			mechanicalScore: number
+			comments?: string
 		}[]
 		vehicleId: string
 	}

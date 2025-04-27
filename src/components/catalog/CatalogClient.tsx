@@ -8,18 +8,59 @@ import { formatDate, transformBadgeValue } from '@/lib/utils'
 import CarCard from '@/components/catalog/CarCard'
 import Loader from '@/components/Loader'
 
+// Type definitions for the filter items
+interface FilterItem {
+	Value: string
+	Count: number
+	IsSelected?: boolean
+	Refinements?: {
+		Nodes: Array<{
+			Facets: FilterItem[]
+		}>
+	}
+	Metadata?: {
+		ModelStartDate: string[]
+		ModelEndDate: string[]
+	}
+}
+
+// Type for the event handlers
+interface SelectChangeEvent {
+	target: {
+		value: string
+	}
+}
+
+interface Car {
+	Id: string
+	Price: number
+	Year: string | number
+	Mileage: number
+	Manufacturer?: string
+	Model?: string
+	FuelType?: string
+	Badge?: string
+	BadgeDetail?: string
+	FINISH?: number
+	Photo?: string
+}
+
 const CatalogClient = () => {
 	const router = useRouter()
 	const searchParams = useSearchParams()
 
 	const filtersReady = useRef(true)
-	const urlParams = useRef({
+	const urlParams = useRef<{
+		manufacturer: string | null
+		modelGroup: string | null
+		model: string | null
+	}>({
 		manufacturer: null,
 		modelGroup: null,
 		model: null,
 	})
 
-	const [sortOption, setSortOption] = useState('newest')
+	const [sortOption, setSortOption] = useState<string>('newest')
 
 	const [loading, setLoading] = useState(false)
 	const [searchByNumber, setSearchByNumber] = useState('')
@@ -33,37 +74,39 @@ const CatalogClient = () => {
 	const [mileageStart, setMileageStart] = useState('')
 	const [mileageEnd, setMileageEnd] = useState('')
 
-	const [endYear, setEndYear] = useState('')
+	const [endYear, setEndYear] = useState<string>('')
 	const [endMonth, setEndMonth] = useState('00')
 
-	const [startYear, setStartYear] = useState('')
+	const [startYear, setStartYear] = useState<string>('')
 	const [startMonth, setStartMonth] = useState('00')
 
-	const [usdKrwRate, setUsdKrwRate] = useState(null)
+	const [usdKrwRate, setUsdKrwRate] = useState<number | null>(null)
 
-	const [cars, setCars] = useState([])
+	const [cars, setCars] = useState<Car[]>([])
 
-	const [manufacturers, setManufacturers] = useState(null)
+	const [manufacturers, setManufacturers] = useState<FilterItem[] | null>(null)
 	const [selectedManufacturer, setSelectedManufacturer] = useState('')
 
-	const [modelGroups, setModelGroups] = useState(null)
+	const [modelGroups, setModelGroups] = useState<FilterItem[] | null>(null)
 	const [selectedModelGroup, setSelectedModelGroup] = useState('')
 
-	const [models, setModels] = useState(null)
+	const [models, setModels] = useState<FilterItem[] | null>(null)
 	const [selectedModel, setSelectedModel] = useState('')
 
-	const [configurations, setConfigurations] = useState(null)
+	const [configurations, setConfigurations] = useState<FilterItem[] | null>(
+		null,
+	)
 	const [selectedConfiguration, setSelectedConfiguration] = useState('')
 
-	const [badges, setBadges] = useState(null)
+	const [badges, setBadges] = useState<FilterItem[] | null>(null)
 	const [selectedBadge, setSelectedBadge] = useState('')
 
-	const [badgeDetails, setBadgeDetails] = useState(null)
+	const [badgeDetails, setBadgeDetails] = useState<FilterItem[] | null>(null)
 	const [selectedBadgeDetails, setSelectedBadgeDetails] = useState('')
 
 	const [error, setError] = useState('')
 
-	const sortOptions = {
+	const sortOptions: Record<string, string> = {
 		newest: '|ModifiedDate',
 		priceAsc: '|PriceAsc',
 		priceDesc: '|PriceDesc',
@@ -154,7 +197,8 @@ const CatalogClient = () => {
 					data?.iNav?.Nodes[2]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
 
 				const filteredManufacturer = allManufacturers.filter(
-					(item) => item.IsSelected === true,
+					(item: unknown) =>
+						(item as { IsSelected: boolean }).IsSelected === true,
 				)[0]
 
 				const models = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
@@ -163,7 +207,8 @@ const CatalogClient = () => {
 
 				if (urlParams.current.modelGroup) {
 					const modelExists = models?.some(
-						(model) => model.Value === urlParams.current.modelGroup,
+						(model: { Value: string }) =>
+							model.Value === urlParams.current.modelGroup,
 					)
 					if (modelExists) {
 						setSelectedModelGroup(urlParams.current.modelGroup)
@@ -194,12 +239,14 @@ const CatalogClient = () => {
 				data?.iNav?.Nodes[2]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
 
 			const filteredManufacturer = allManufacturers.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 
 			const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
 			const filteredModel = modelGroup.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 			const models = filteredModel?.Refinements?.Nodes[0]?.Facets
 
@@ -207,7 +254,7 @@ const CatalogClient = () => {
 
 			if (urlParams.current.model) {
 				const modelExists = models?.some(
-					(model) => model.Value === urlParams.current.model,
+					(model: { Value: string }) => model.Value === urlParams.current.model,
 				)
 				if (modelExists) {
 					setSelectedModel(urlParams.current.model)
@@ -241,18 +288,21 @@ const CatalogClient = () => {
 				data?.iNav?.Nodes[1]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
 
 			const filteredManufacturer = allManufacturers.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 
 			const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
 
 			const filteredModel = modelGroup?.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 
 			const models = filteredModel?.Refinements?.Nodes[0]?.Facets
 			const filteredConfiguration = models?.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 
 			const configurations =
@@ -282,25 +332,29 @@ const CatalogClient = () => {
 				data?.iNav?.Nodes[1]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
 
 			const filteredManufacturer = allManufacturers.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 
 			const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
 
 			const filteredModel = modelGroup?.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 
 			const models = filteredModel?.Refinements?.Nodes[0]?.Facets
 			const filteredConfiguration = models?.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 
 			const configurations =
 				filteredConfiguration?.Refinements?.Nodes[0]?.Facets
 
 			const filteredBadgeGroup = configurations?.filter(
-				(item) => item.IsSelected === true,
+				(item: unknown) =>
+					(item as { IsSelected: boolean }).IsSelected === true,
 			)[0]
 
 			const badges = filteredBadgeGroup?.Refinements?.Nodes[0]?.Facets
@@ -341,22 +395,28 @@ const CatalogClient = () => {
 					data?.iNav?.Nodes[2]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
 
 				const filteredManufacturer = allManufacturers?.find(
-					(item) => item.IsSelected,
+					(item: FilterItem) => item.IsSelected,
 				)
 				const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
-				const filteredModel = modelGroup?.find((item) => item.IsSelected)
+				const filteredModel = modelGroup?.find(
+					(item: FilterItem) => item.IsSelected,
+				)
 
 				const models = filteredModel?.Refinements?.Nodes[0]?.Facets
-				const filteredConfiguration = models?.find((item) => item.IsSelected)
+				const filteredConfiguration = models?.find(
+					(item: FilterItem) => item.IsSelected,
+				)
 
 				const configurations =
 					filteredConfiguration?.Refinements?.Nodes[0]?.Facets
 				const filteredBadgeGroup = configurations?.find(
-					(item) => item.IsSelected,
+					(item: FilterItem) => item.IsSelected === true,
 				)
 
 				const badges = filteredBadgeGroup?.Refinements?.Nodes[0]?.Facets
-				const filteredBadge = badges?.find((item) => item.IsSelected)
+				const filteredBadge = badges?.find(
+					(item: FilterItem) => item.IsSelected,
+				)
 
 				const badgeDetails = filteredBadge?.Refinements?.Nodes[0]?.Facets
 
@@ -571,7 +631,7 @@ const CatalogClient = () => {
 		}
 	}, [selectedBadge])
 
-	const handleManufacturerChange = (e) => {
+	const handleManufacturerChange = (e: SelectChangeEvent) => {
 		const value = e.target.value
 		setSelectedModelGroup('')
 		setSelectedModel('')
@@ -588,7 +648,7 @@ const CatalogClient = () => {
 		}
 	}
 
-	const handleModelGroupChange = (e) => {
+	const handleModelGroupChange = (e: SelectChangeEvent) => {
 		const value = e.target.value
 		setSelectedModel('')
 		setSelectedConfiguration('')
@@ -606,7 +666,7 @@ const CatalogClient = () => {
 		}
 	}
 
-	const handleModelChange = (e) => {
+	const handleModelChange = (e: SelectChangeEvent) => {
 		const value = e.target.value
 		setSelectedConfiguration('')
 		setSelectedBadge('')
@@ -625,7 +685,7 @@ const CatalogClient = () => {
 		}
 	}
 
-	const handleConfigurationChange = (e) => {
+	const handleConfigurationChange = (e: SelectChangeEvent) => {
 		const value = e.target.value
 		setSelectedBadge('')
 		setSelectedBadgeDetails('')
@@ -633,14 +693,14 @@ const CatalogClient = () => {
 		setCurrentPage(1)
 	}
 
-	const handleBadgeChange = (e) => {
+	const handleBadgeChange = (e: SelectChangeEvent) => {
 		const value = e.target.value
 		setSelectedBadgeDetails('')
 		setSelectedBadge(value)
 		setCurrentPage(1)
 	}
 
-	const handleBadgeDetailsChange = (e) => {
+	const handleBadgeDetailsChange = (e: SelectChangeEvent) => {
 		const value = e.target.value
 		setSelectedBadgeDetails(value)
 		setCurrentPage(1)
@@ -716,9 +776,9 @@ const CatalogClient = () => {
 									{translations[model.Value] ||
 										translateSmartly(model.Value) ||
 										model.Value}{' '}
-									({formatDate(model?.Metadata?.ModelStartDate[0])} -{' '}
-									{formatDate(model?.Metadata?.ModelEndDate[0])}) ({model.Count}{' '}
-									автомобилей )
+									({formatDate(model?.Metadata?.ModelStartDate?.[0] || '')} -{' '}
+									{formatDate(model?.Metadata?.ModelEndDate?.[0] || '')}) (
+									{model.Count} автомобилей )
 								</option>
 							))}
 					</select>
@@ -774,16 +834,20 @@ const CatalogClient = () => {
 						<select
 							className='w-full border border-gray-300 rounded-md px-3 py-2 mt-4 disabled:bg-gray-200'
 							value={startYear}
-							onChange={(e) => setStartYear(parseInt(e.target.value))}
+							onChange={(e) => setStartYear(e.target.value)}
 						>
 							<option value=''>Год от</option>
 							{Array.from(
-								{ length: (endYear || new Date().getFullYear()) - 1979 },
+								{
+									length:
+										parseInt(endYear || new Date().getFullYear().toString()) -
+										1979,
+								},
 								(_, i) => 1980 + i,
 							)
 								.reverse()
 								.map((year) => (
-									<option key={year} value={year}>
+									<option key={year} value={year.toString()}>
 										{year}
 									</option>
 								))}
@@ -823,18 +887,21 @@ const CatalogClient = () => {
 						<select
 							className='w-full border border-gray-300 rounded-md px-3 py-2 mt-4 disabled:bg-gray-200'
 							value={endYear}
-							onChange={(e) => setEndYear(parseInt(e.target.value))}
+							onChange={(e) => setEndYear(e.target.value)}
 						>
 							<option value=''>Год до</option>
 							{Array.from(
 								{
-									length: new Date().getFullYear() - (startYear || 1980) + 1,
+									length:
+										new Date().getFullYear() -
+										parseInt(startYear || '1980') +
+										1,
 								},
-								(_, i) => (startYear || 1980) + i,
+								(_, i) => parseInt(startYear || '1980') + i,
 							)
 								.reverse()
 								.map((year) => (
-									<option key={year} value={year}>
+									<option key={year} value={year.toString()}>
 										{year}
 									</option>
 								))}
@@ -1018,7 +1085,7 @@ const CatalogClient = () => {
 							</select>
 						</div>
 						{cars.map((car) => (
-							<CarCard key={car.Id} car={car} usdKrwRate={usdKrwRate} />
+							<CarCard key={car.Id} car={car} usdKrwRate={usdKrwRate || 0} />
 						))}
 					</div>
 				) : (

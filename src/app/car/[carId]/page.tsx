@@ -130,7 +130,15 @@ interface CarDetails {
 		fuelName: string
 		colorName: string
 	}
-	inspectionSummaries?: Array<Record<string, unknown>>
+	inspectionSummaries?: {
+		inspectionDate: string
+		inspectionType: string
+		totalScore: number
+		exteriorScore: number
+		interiorScore: number
+		mechanicalScore: number
+		comments?: string
+	}[]
 }
 
 interface CalculationResult {
@@ -174,6 +182,23 @@ interface InspectionData {
 		accdient: boolean
 		simpleRepair: boolean
 	}
+}
+
+// Helper function to check if car has valid inspection summaries for the CarInspection component
+const hasValidInspections = (
+	car: CarDetails,
+): car is CarDetails & {
+	inspectionSummaries: {
+		inspectionDate: string
+		inspectionType: string
+		totalScore: number
+		exteriorScore: number
+		interiorScore: number
+		mechanicalScore: number
+		comments?: string
+	}[]
+} => {
+	return !!car.inspectionSummaries && car.inspectionSummaries.length > 0
 }
 
 export default function CarDetailPage({
@@ -593,9 +618,7 @@ export default function CarDetailPage({
 			</div>
 
 			{/* Car inspection report */}
-			<div>
-				<CarInspection car={car} />
-			</div>
+			<div>{hasValidInspections(car) && <CarInspection car={car} />}</div>
 
 			{/* Inspection data from Encar */}
 			{inspectionData && (
