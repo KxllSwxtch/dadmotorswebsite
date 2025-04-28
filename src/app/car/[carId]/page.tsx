@@ -23,6 +23,7 @@ import { motion } from 'framer-motion'
 // Custom components
 import { CarInspection } from '@/components'
 import Loader from '@/components/Loader'
+import { Maximize } from 'lucide-react'
 
 // Translation dictionaries for Korean to Russian
 const translations = {
@@ -153,6 +154,15 @@ interface CalculationResult {
 	totalCarWithLogisticsRub: number
 	totalCarWithLogisticsUsd: number
 	totalCarWithLogisticsUsdt: number
+	brokerServices: number
+	transportToMoscowStandard: number
+	transportToMoscowTruck: number
+	totalWithMoscowDeliveryStandard: number
+	totalWithMoscowDeliveryTruckRub: number
+	totalWithMoscowDeliveryStandardUsd: number
+	totalWithMoscowDeliveryTruckUsd: number
+	totalWithMoscowDeliveryStandardUsdt: number
+	totalWithMoscowDeliveryTruckUsdt: number
 }
 
 interface InspectionData {
@@ -211,6 +221,10 @@ export default function CarDetailPage({
 		null,
 	)
 	const [thumbsSwiper, setThumbsSwiper] = useState<SwiperClass | null>(null)
+	const [fullScreenMode, setFullScreenMode] = useState<boolean>(false)
+	const [activeImageIndex, setActiveImageIndex] = useState<number>(0)
+	const [fullscreenSwiperRef, setFullscreenSwiperRef] =
+		useState<SwiperClass | null>(null)
 
 	const [usdKrwRate, setUsdKrwRate] = useState<number | null>(null)
 	const [usdRubRate, setUsdRubRate] = useState<number | null>(null)
@@ -227,6 +241,21 @@ export default function CarDetailPage({
 		useState<CalculationResult | null>(null)
 
 	const { carId } = use(params)
+
+	// Helper function to get the full photo URL
+	const getPhotoUrl = (path: string) =>
+		`https://ci.encar.com/carpicture${path}?impolicy=heightRate&rh=696&cw=1400&ch=696&cg=Center&wtmk=https://ci.encar.com/wt_mark/w_mark_04.png&t=20250401111058`
+
+	const openFullScreen = (index: number) => {
+		setActiveImageIndex(index)
+		setFullScreenMode(true)
+		document.body.style.overflow = 'hidden' // Prevent scrolling when fullscreen
+	}
+
+	const closeFullScreen = () => {
+		setFullScreenMode(false)
+		document.body.style.overflow = 'auto' // Re-enable scrolling
+	}
 
 	// Fetch car data
 	useEffect(() => {
@@ -325,6 +354,24 @@ export default function CarDetailPage({
 		fetchUsdtKrwRate()
 	}, [])
 
+	// Handle keyboard events for fullscreen navigation
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (!fullScreenMode || !fullscreenSwiperRef) return
+
+			if (e.key === 'Escape') {
+				closeFullScreen()
+			} else if (e.key === 'ArrowRight') {
+				fullscreenSwiperRef.slideNext()
+			} else if (e.key === 'ArrowLeft') {
+				fullscreenSwiperRef.slidePrev()
+			}
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [fullScreenMode, fullscreenSwiperRef, closeFullScreen])
+
 	// Calculate full price to Russia
 	const handleCalculate = async () => {
 		setLoadingCalc(true)
@@ -336,56 +383,93 @@ export default function CarDetailPage({
 			return
 		}
 
-		// Logistics cost calculation
-		const logisticsCostKrw = 2040000 // Default for all sanctioned vehicles
+		// Логика расчёта логистики
+		const logisticsCostKrw = 2040000 // По умолчанию для всех санкционных авто
 		let logisticsCostUsd = logisticsCostKrw / usdKrwRate
 		const logisticsCostRub = logisticsCostUsd * usdRubRate
 
 		// Add surcharge for vehicles with engine displacement > 2000cc
-		if (car?.spec?.displacement > 2000) {
+		if (car.spec?.displacement && car.spec.displacement > 2000) {
 			logisticsCostUsd = logisticsCostUsd + 200
 		}
 
+		// Broker services cost (fixed)
+		const brokerServices = 100000 // рублей
+
+		// Auto transportation to Moscow costs
+		const transportToMoscowStandard = 180000 // рублей (автовоз)
+		const transportToMoscowTruck = 220000 // рублей (фура)
+
 		try {
-			// Simulate calculation for customs duties
-			// In a real app, this would make an API call to a customs calculation service
+			const yearMonth = car.category?.yearMonth
+			const formYear = car.category?.formYear
 
-			// Simplified calculation for demo purposes
-			const age = calculateAge(
-				car?.category?.formYear,
-				car?.category?.yearMonth?.substring(4, 6),
-			)
-
-			// Basic duty rates based on vehicle age and engine type
-			let dutyRatePercent = 0
-
-			if (age === '0-3') dutyRatePercent = 48
-			else if (age === '3-5') dutyRatePercent = 42
-			else if (age === '5-7') dutyRatePercent = 36
-			else dutyRatePercent = 30
-
-			// If engine is diesel, add extra 5%
-			if (car?.spec?.fuelName === '경유') {
-				dutyRatePercent += 5
+			if (
+				!yearMonth ||
+				!formYear ||
+				!car.spec?.displacement ||
+				!car.advertisement?.price
+			) {
+				throw new Error('Недостаточно данных для расчёта')
 			}
 
-			const carPriceRub =
-				((car?.advertisement?.price * 10000) / usdKrwRate) * usdRubRate
-			const tax = carPriceRub * (dutyRatePercent / 100)
-			const sbor = 20000 // Fixed customs processing fee
-			const util = car?.spec?.displacement > 2500 ? 600000 : 400000 // Recycling fee
+			const ageCategory = calculateAge(formYear, yearMonth.substring(4, 6))
 
-			const total = tax + sbor + util // Total customs payments
-			const totalWithLogisticsRub = total + logisticsCostRub
-			const totalCarWithLogisticsRub = carPriceRub + totalWithLogisticsRub
+			const response = await axios.post(
+				'https://corsproxy.io/?key=28174bc7&url=https://calcus.ru/calculate/Customs',
+				new URLSearchParams({
+					owner: '1',
+					age: ageCategory,
+					engine: car.spec.fuelName === '가솔린' ? '1' : '2',
+					power: '1',
+					power_unit: '1',
+					value: car.spec.displacement.toString(),
+					price: (car.advertisement.price * 10000).toString(),
+					curr: 'KRW',
+				}).toString(),
+				{
+					withCredentials: false,
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+					},
+				},
+			)
+
+			if (response.status !== 200) throw new Error('Ошибка при расчёте')
+
+			const data = await response.data
+
+			const formattedTotal = parseInt(
+				data.total.split(',')[0].split(' ').join(''),
+			)
+			const formattedTotal2 = parseInt(
+				data.total2.split(',')[0].split(' ').join(''),
+			)
+
+			const totalWithLogisticsRub = formattedTotal + logisticsCostRub
+			const totalCarWithLogisticsRub = formattedTotal2 + logisticsCostRub
+
+			// Calculate total with Moscow delivery for both transport options
+			const totalWithMoscowDeliveryStandard =
+				totalCarWithLogisticsRub + brokerServices + transportToMoscowStandard
+			const totalWithMoscowDeliveryTruckRub =
+				totalCarWithLogisticsRub + brokerServices + transportToMoscowTruck
+
+			const totalWithMoscowDeliveryStandardUsd =
+				totalWithMoscowDeliveryStandard / usdRubRate
+			const totalWithMoscowDeliveryTruckUsd =
+				totalWithMoscowDeliveryTruckRub / usdRubRate
+
+			const totalWithMoscowDeliveryStandardUsdt =
+				totalWithMoscowDeliveryStandard / usdtRubRates
+			const totalWithMoscowDeliveryTruckUsdt =
+				totalWithMoscowDeliveryTruckRub / usdtRubRates
+
 			const totalCarWithLogisticsUsd = totalCarWithLogisticsRub / usdRubRate
 			const totalCarWithLogisticsUsdt = totalCarWithLogisticsRub / usdtRubRates
 
 			setCalculatedResult({
-				tax,
-				sbor,
-				util,
-				total,
+				...data,
 				logisticsCostRub,
 				logisticsCostKrw,
 				logisticsCostUsd,
@@ -393,6 +477,15 @@ export default function CarDetailPage({
 				totalCarWithLogisticsRub,
 				totalCarWithLogisticsUsd,
 				totalCarWithLogisticsUsdt,
+				brokerServices,
+				transportToMoscowStandard,
+				transportToMoscowTruck,
+				totalWithMoscowDeliveryStandard,
+				totalWithMoscowDeliveryTruckRub,
+				totalWithMoscowDeliveryStandardUsd,
+				totalWithMoscowDeliveryTruckUsd,
+				totalWithMoscowDeliveryStandardUsdt,
+				totalWithMoscowDeliveryTruckUsdt,
 			})
 		} catch (err: unknown) {
 			const errorMessage =
@@ -407,21 +500,18 @@ export default function CarDetailPage({
 	if (error) return <p className='text-center text-red-500'>{error}</p>
 	if (!car) return <p className='text-center text-lg'>Автомобиль не найден</p>
 
-	// Helper function to get the full photo URL
-	const getPhotoUrl = (path: string) =>
-		`https://ci.encar.com/carpicture${path}?impolicy=heightRate&rh=696&cw=1400&ch=696&cg=Center&wtmk=https://ci.encar.com/wt_mark/w_mark_04.png&t=20250401111058`
-	const sortedPhotos = car?.photos?.sort((a, b) => (a.path > b.path ? 1 : -1))
+	const sortedPhotos = car.photos?.sort((a, b) => (a.path > b.path ? 1 : -1))
 	const uniquePhotos = [
-		...new Map(car?.photos?.map((photo) => [photo.path, photo])).values(),
+		...new Map(car.photos?.map((photo) => [photo.path, photo])).values(),
 	]
 
-	const formattedYearMonth = `${car?.category?.yearMonth.substring(
+	const formattedYearMonth = `${car.category?.yearMonth?.substring(
 		4,
-	)}/${car?.category?.yearMonth.substring(0, 4)}`
+	)}/${car.category?.yearMonth?.substring(0, 4)}`
 
-	const carPriceKorea = car?.advertisement?.price * 10000
+	const carPriceKorea = car.advertisement?.price * 10000
 	const carPriceUsd = Math.round(
-		(car?.advertisement?.price * 10000) / (usdKrwRate || 1),
+		(car.advertisement?.price * 10000) / (usdKrwRate || 1),
 	)
 	const carPriceRub = carPriceUsd * (usdRubRate || 1)
 
@@ -445,14 +535,27 @@ export default function CarDetailPage({
 								pagination={{ clickable: true }}
 								thumbs={{ swiper: thumbsSwiper }}
 								className='rounded-lg shadow-lg mb-4'
+								onSlideChange={(swiper) =>
+									setActiveImageIndex(swiper.activeIndex)
+								}
 							>
 								{uniquePhotos.map((photo: { path: string }, index: number) => (
 									<SwiperSlide key={index}>
-										<img
-											src={getPhotoUrl(photo.path)}
-											alt={`Car image ${index + 1}`}
-											className='w-full h-auto rounded-lg object-cover max-h-[500px]'
-										/>
+										<div className='relative'>
+											<img
+												src={getPhotoUrl(photo.path)}
+												alt={`Car image ${index + 1}`}
+												className='w-full h-auto rounded-lg object-cover max-h-[500px] cursor-pointer'
+												onClick={() => openFullScreen(index)}
+											/>
+											<button
+												className='absolute bottom-4 right-4 bg-black bg-opacity-60 text-white p-2 rounded-md flex items-center gap-1 hover:bg-opacity-80 transition-all cursor-pointer'
+												onClick={() => openFullScreen(index)}
+											>
+												<Maximize />
+												<span>На весь экран</span>
+											</button>
+										</div>
 									</SwiperSlide>
 								))}
 							</Swiper>
@@ -572,7 +675,10 @@ export default function CarDetailPage({
 							}}
 							className='text-sm text-gray-600'
 						>
-							USDT - RUB: <span className='font-medium'>{usdtRubRates} ₽</span>{' '}
+							USDT - RUB:{' '}
+							<span className='font-medium'>
+								{usdtRubRates ? usdtRubRates.toLocaleString() : '--'} ₽
+							</span>{' '}
 						</motion.p>
 					</div>
 
@@ -734,7 +840,7 @@ export default function CarDetailPage({
 							href={`https://fem.encar.com/cars/report/inspect/${vehicleId}`}
 							target='_blank'
 							rel='noopener noreferrer'
-							className='mt-8 inline-block bg-black text-white text-sm px-6 py-3 rounded-md hover:bg-gray-800 transition duration-300 text-center'
+							className='mt-8 inline-block bg-black text-white text-sm px-6 py-3 rounded-md hover:bg-gray-800 transition duration-300 text-center w-full'
 						>
 							Посмотреть полный технический отчёт
 						</a>
@@ -798,9 +904,9 @@ export default function CarDetailPage({
 						</div>
 					</div>
 
-					<div className='p-4 border rounded-lg'>
+					<div className='p-4 border rounded-lg flex justify-center items-center flex-col'>
 						<h3 className='font-medium mb-2'>Социальные сети</h3>
-						<div className='flex justify-center space-x-4 mt-2'>
+						<div className='flex justify-center items-center space-x-4 mt-2'>
 							<a
 								target='_blank'
 								href='https://www.instagram.com/dadmotorskr'
@@ -845,7 +951,10 @@ export default function CarDetailPage({
 				</h2>
 				<div className='flex justify-center gap-6 flex-wrap'>
 					<button
-						onClick={() => setSelectedCountry('russia')}
+						onClick={() => {
+							setSelectedCountry('russia')
+							handleCalculate()
+						}}
 						className={`px-6 py-3 rounded-lg shadow-md text-lg font-semibold transition duration-300 border-2 cursor-pointer
               ${
 								selectedCountry === 'russia'
@@ -858,81 +967,373 @@ export default function CarDetailPage({
 				</div>
 			</div>
 
-			{/* Russia calculation */}
-			{selectedCountry === 'russia' && (
+			{/* Remove the second calculation button and just show a loading indicator if needed */}
+			{loadingCalc && selectedCountry === 'russia' && (
 				<div className='mt-8 flex justify-center'>
-					<button
-						className={`cursor-pointer relative py-3 px-10 rounded-lg shadow-xl text-lg font-semibold transition-all duration-300 border-2 flex items-center gap-2
-              ${
-								loadingCalc
-									? 'bg-gray-600 border-gray-700 text-gray-300 opacity-60 cursor-not-allowed'
-									: 'bg-gradient-to-r from-red-600 to-red-700 border-red-800 text-white hover:from-red-700 hover:to-red-800 hover:border-red-900 hover:scale-105'
-							}`}
-						onClick={handleCalculate}
-						disabled={loadingCalc}
-					>
-						{loadingCalc ? (
-							<>
-								<span className='animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5'></span>
-								<span>Расчёт...</span>
-							</>
-						) : (
-							<>
-								📊 <span>Рассчитать стоимость</span>
-							</>
-						)}
-					</button>
+					<div className='cursor-not-allowed relative py-3 px-10 rounded-lg shadow-xl text-lg font-semibold transition-all duration-300 border-2 flex items-center gap-2 bg-gray-600 border-gray-700 text-gray-300 opacity-60'>
+						<span className='animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5'></span>
+						<span>Расчёт...</span>
+					</div>
 				</div>
 			)}
 
 			{calculatedResult && selectedCountry === 'russia' && (
-				<div className='mt-6 p-5 bg-gray-50 shadow-md rounded-lg text-center'>
-					<h2 className='text-xl font-semibold mb-4'>Расчёт для России</h2>
-					<p className='text-gray-600'>
-						Стоимость автомобиля: ₩{carPriceKorea.toLocaleString()} | $
-						{carPriceUsd.toLocaleString()} |{' '}
-						{Math.round(carPriceRub).toLocaleString()} ₽
-					</p>
-					<br />
-					<p className='text-gray-600'>
-						Расходы по Корее: ₩
-						{calculatedResult?.logisticsCostKrw.toLocaleString()} | $
-						{calculatedResult?.logisticsCostUsd.toLocaleString()} |{' '}
-						{calculatedResult?.logisticsCostRub.toLocaleString()} ₽
-					</p>
-					<br />
-					<br />
-					<h3 className='font-bold text-xl'>Расходы во Владивостоке</h3>
-					<p className='text-gray-600'>
-						Таможенная пошлина: {calculatedResult?.tax?.toLocaleString()} ₽
-					</p>
-					<p className='text-gray-600'>
-						Таможенный сбор: {calculatedResult?.sbor?.toLocaleString()} ₽
-					</p>
-					<p className='text-gray-600'>
-						Утилизационный сбор: {calculatedResult?.util?.toLocaleString()} ₽
-					</p>
-					<p className='text-black font-medium text-lg mx-auto mt-10'>
-						Стоимость автомобиля под ключ во Владивостоке: <br />$
-						{Math.round(
-							calculatedResult?.totalCarWithLogisticsUsd,
-						).toLocaleString('en-US')}{' '}
-						|{' '}
-						{calculatedResult?.totalCarWithLogisticsRub?.toLocaleString(
-							'ru-RU',
-						)}{' '}
-						₽
-					</p>
-					<p className='text-black font-medium text-lg mx-auto mt-10'>
-						Стоимость автомобиля под ключ во Владивостоке (USDT): <br />$
-						{Math.round(
-							calculatedResult?.totalCarWithLogisticsUsdt,
-						).toLocaleString('en-US')}{' '}
-					</p>
+				<div className='mt-6 bg-gray-50 shadow-lg rounded-xl overflow-hidden'>
+					<div className='bg-blue-700 text-white py-4 px-5'>
+						<h2 className='text-2xl font-bold text-center'>
+							Расчёт для России
+						</h2>
+					</div>
+
+					<div className='p-6'>
+						{/* Car Price Section */}
+						<div className='mb-8 pb-6 border-b border-gray-200'>
+							<div className='flex flex-col items-center justify-center mb-4'>
+								<span className='text-gray-500 mb-1 text-sm'>
+									Стоимость автомобиля
+								</span>
+								<span className='text-3xl font-bold text-gray-800'>
+									₩{carPriceKorea.toLocaleString()}
+								</span>
+								<div className='mt-1 text-gray-600 text-sm flex gap-2'>
+									<span>${carPriceUsd.toLocaleString()}</span>
+									<span>|</span>
+									<span>{Math.round(carPriceRub).toLocaleString()} ₽</span>
+								</div>
+							</div>
+
+							<div className='flex flex-col items-center justify-center'>
+								<span className='text-gray-500 mb-1 text-sm'>
+									Расходы по Корее
+								</span>
+								<span className='text-xl font-semibold text-gray-800'>
+									₩{calculatedResult?.logisticsCostKrw.toLocaleString()}
+								</span>
+								<div className='mt-1 text-gray-600 text-sm flex gap-2'>
+									<span>
+										${calculatedResult?.logisticsCostUsd.toLocaleString()}
+									</span>
+									<span>|</span>
+									<span>
+										{calculatedResult?.logisticsCostRub.toLocaleString()} ₽
+									</span>
+								</div>
+							</div>
+						</div>
+
+						{/* Customs Fees Section */}
+						<div className='mb-8 pb-6 border-b border-gray-200'>
+							<h3 className='text-center font-bold text-xl mb-5 text-gray-800'>
+								Расходы во Владивостоке
+							</h3>
+
+							<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+								<div className='bg-white p-4 rounded-lg shadow-sm border border-gray-200'>
+									<div className='text-center'>
+										<span className='text-gray-500 text-sm'>
+											Таможенная пошлина
+										</span>
+										<p className='text-xl font-semibold text-gray-800 mt-1'>
+											{calculatedResult?.tax?.toLocaleString()} ₽
+										</p>
+									</div>
+								</div>
+
+								<div className='bg-white p-4 rounded-lg shadow-sm border border-gray-200'>
+									<div className='text-center'>
+										<span className='text-gray-500 text-sm'>
+											Таможенный сбор
+										</span>
+										<p className='text-xl font-semibold text-gray-800 mt-1'>
+											{calculatedResult?.sbor?.toLocaleString()} ₽
+										</p>
+									</div>
+								</div>
+
+								<div className='bg-white p-4 rounded-lg shadow-sm border border-gray-200'>
+									<div className='text-center'>
+										<span className='text-gray-500 text-sm'>
+											Утилизационный сбор
+										</span>
+										<p className='text-xl font-semibold text-gray-800 mt-1'>
+											{calculatedResult?.util?.toLocaleString()} ₽
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<div className='mt-6 p-5 bg-white rounded-lg shadow-sm border border-gray-200 text-center'>
+								<h4 className='text-gray-500 text-sm mb-1'>
+									Стоимость автомобиля под ключ во Владивостоке
+								</h4>
+								<p className='text-2xl font-bold text-gray-800'>
+									{calculatedResult?.totalCarWithLogisticsRub?.toLocaleString(
+										'ru-RU',
+									)}{' '}
+									₽
+								</p>
+								<div className='mt-1 text-gray-600 flex justify-center gap-2 text-sm'>
+									<span>
+										$
+										{Math.round(
+											calculatedResult?.totalCarWithLogisticsUsd,
+										).toLocaleString('en-US')}
+									</span>
+									<span>|</span>
+									<span>
+										USDT: $
+										{Math.round(
+											calculatedResult?.totalCarWithLogisticsUsdt,
+										).toLocaleString('en-US')}
+									</span>
+								</div>
+							</div>
+						</div>
+
+						{/* Additional Costs Section */}
+						<div className='mb-8 pb-2'>
+							<h3 className='text-center font-bold text-xl mb-5 text-gray-800'>
+								Дополнительные расходы по России
+							</h3>
+
+							<div className='bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-5'>
+								<div className='text-center'>
+									<span className='text-gray-500 text-sm'>Услуги брокера</span>
+									<p className='text-xl font-semibold text-gray-800 mt-1'>
+										{calculatedResult?.brokerServices?.toLocaleString()} ₽
+									</p>
+								</div>
+							</div>
+
+							<div className='grid grid-cols-1 md:grid-cols-2 gap-6 mt-6'>
+								<div className='bg-white rounded-xl shadow-md overflow-hidden border-2 border-blue-100 hover:border-blue-300 transition-colors'>
+									<div className='bg-blue-600 text-white py-3 px-4 text-center'>
+										<h4 className='font-semibold text-lg'>Автовоз до Москвы</h4>
+									</div>
+									<div className='p-5'>
+										<div className='text-center mb-4'>
+											<span className='text-gray-500 text-sm'>
+												Стоимость доставки
+											</span>
+											<p className='text-xl font-semibold text-gray-800 mt-1'>
+												{calculatedResult?.transportToMoscowStandard?.toLocaleString()}{' '}
+												₽
+											</p>
+										</div>
+
+										<div className='pt-4 border-t border-gray-200'>
+											<div className='text-center'>
+												<span className='text-gray-500 text-sm'>
+													Итоговая стоимость под ключ в Москве
+												</span>
+												<p className='text-2xl font-bold text-blue-800 mt-2'>
+													{calculatedResult?.totalWithMoscowDeliveryStandard?.toLocaleString(
+														'ru-RU',
+													)}{' '}
+													₽
+												</p>
+												<p className='text-lg font-semibold text-gray-700 mt-1'>
+													$
+													{Math.round(
+														calculatedResult?.totalWithMoscowDeliveryStandardUsd,
+													).toLocaleString('en-US')}
+												</p>
+												<p className='text-gray-500 text-sm mt-1'>
+													USDT: $
+													{Math.round(
+														calculatedResult?.totalWithMoscowDeliveryStandardUsdt,
+													).toLocaleString('en-US')}
+												</p>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div className='bg-white rounded-xl shadow-md overflow-hidden border-2 border-red-100 hover:border-red-300 transition-colors'>
+									<div className='bg-red-600 text-white py-3 px-4 text-center'>
+										<h4 className='font-semibold text-lg'>Фура до Москвы</h4>
+									</div>
+									<div className='p-5'>
+										<div className='text-center mb-4'>
+											<span className='text-gray-500 text-sm'>
+												Стоимость доставки
+											</span>
+											<p className='text-xl font-semibold text-gray-800 mt-1'>
+												{calculatedResult?.transportToMoscowTruck?.toLocaleString()}{' '}
+												₽
+											</p>
+										</div>
+
+										<div className='pt-4 border-t border-gray-200'>
+											<div className='text-center'>
+												<span className='text-gray-500 text-sm'>
+													Итоговая стоимость под ключ в Москве
+												</span>
+												<p className='text-2xl font-bold text-red-800 mt-2'>
+													{calculatedResult?.totalWithMoscowDeliveryTruckRub?.toLocaleString(
+														'ru-RU',
+													)}{' '}
+													₽
+												</p>
+												<p className='text-lg font-semibold text-gray-700 mt-1'>
+													$
+													{Math.round(
+														calculatedResult?.totalWithMoscowDeliveryTruckUsd,
+													).toLocaleString('en-US')}
+												</p>
+												<p className='text-gray-500 text-sm mt-1'>
+													USDT: $
+													{Math.round(
+														calculatedResult?.totalWithMoscowDeliveryTruckUsdt,
+													).toLocaleString('en-US')}
+												</p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			)}
 
 			{errorCalc && <p className='text-center text-red-500'>{errorCalc}</p>}
+
+			{/* Fullscreen Gallery Modal */}
+			{fullScreenMode && uniquePhotos && (
+				<motion.div
+					className='fixed inset-0 bg-black z-50 flex flex-col items-center justify-center'
+					onClick={closeFullScreen}
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					transition={{ duration: 0.3 }}
+				>
+					<motion.button
+						className='absolute top-4 right-4 text-white bg-black bg-opacity-50 p-2 rounded-full hover:bg-opacity-70 z-50'
+						onClick={closeFullScreen}
+						whileHover={{ scale: 1.1 }}
+						whileTap={{ scale: 0.9 }}
+					>
+						<svg
+							xmlns='http://www.w3.org/2000/svg'
+							fill='none'
+							viewBox='0 0 24 24'
+							strokeWidth={2}
+							stroke='currentColor'
+							className='w-6 h-6'
+						>
+							<path
+								strokeLinecap='round'
+								strokeLinejoin='round'
+								d='M6 18 18 6M6 6l12 12'
+							/>
+						</svg>
+					</motion.button>
+
+					<div
+						className='w-full h-full flex items-center justify-center p-4 md:p-10'
+						onClick={(e) => e.stopPropagation()}
+					>
+						<Swiper
+							modules={[Navigation, Pagination]}
+							spaceBetween={0}
+							slidesPerView={1}
+							pagination={{
+								clickable: true,
+								el: '.swiper-pagination',
+							}}
+							initialSlide={activeImageIndex}
+							className='w-full max-w-5xl h-full'
+							onSwiper={setFullscreenSwiperRef}
+							onSlideChange={(swiper) =>
+								setActiveImageIndex(swiper.activeIndex)
+							}
+							effect='fade'
+							speed={300}
+						>
+							{uniquePhotos.map((photo: { path: string }, index: number) => (
+								<SwiperSlide
+									key={index}
+									className='flex items-center justify-center'
+								>
+									<motion.div
+										initial={{ opacity: 0, scale: 0.9 }}
+										animate={{ opacity: 1, scale: 1 }}
+										transition={{ duration: 0.3 }}
+										className='w-full h-full flex items-center justify-center'
+									>
+										<img
+											src={getPhotoUrl(photo.path)}
+											alt={`Car image ${index + 1}`}
+											className='max-w-full max-h-[80vh] object-contain mx-auto'
+										/>
+									</motion.div>
+								</SwiperSlide>
+							))}
+						</Swiper>
+
+						{/* Custom navigation buttons */}
+						<motion.div
+							className='absolute left-4 md:left-10 z-10 text-white bg-black bg-opacity-50 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer'
+							whileHover={{ scale: 1.1, backgroundColor: 'rgba(0,0,0,0.7)' }}
+							whileTap={{ scale: 0.9 }}
+							onClick={(e) => {
+								e.stopPropagation()
+								if (fullscreenSwiperRef) fullscreenSwiperRef.slidePrev()
+							}}
+						>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								fill='none'
+								viewBox='0 0 24 24'
+								strokeWidth={2}
+								stroke='currentColor'
+								className='w-6 h-6'
+							>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									d='M15.75 19.5L8.25 12l7.5-7.5'
+								/>
+							</svg>
+						</motion.div>
+
+						<motion.div
+							className='absolute right-4 md:right-10 z-10 text-white bg-black bg-opacity-50 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer'
+							whileHover={{ scale: 1.1, backgroundColor: 'rgba(0,0,0,0.7)' }}
+							whileTap={{ scale: 0.9 }}
+							onClick={(e) => {
+								e.stopPropagation()
+								if (fullscreenSwiperRef) fullscreenSwiperRef.slideNext()
+							}}
+						>
+							<svg
+								xmlns='http://www.w3.org/2000/svg'
+								fill='none'
+								viewBox='0 0 24 24'
+								strokeWidth={2}
+								stroke='currentColor'
+								className='w-6 h-6'
+							>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									d='M8.25 4.5l7.5 7.5-7.5 7.5'
+								/>
+							</svg>
+						</motion.div>
+					</div>
+
+					<div className='absolute bottom-6 left-0 right-0 z-10'>
+						<div className='swiper-pagination flex justify-center gap-1'></div>
+						<p className='text-sm text-white text-center mt-2'>
+							{activeImageIndex + 1} / {uniquePhotos.length} • Используйте
+							стрелки для навигации или свайп на телефоне
+						</p>
+					</div>
+				</motion.div>
+			)}
 		</div>
 	)
 }

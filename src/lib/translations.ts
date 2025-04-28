@@ -6,6 +6,20 @@
 // Comprehensive dictionary for Korean auto terms
 /* eslint-disable no-dupe-keys */
 export const translations: Record<string, string> = {
+	트렌디: 'Trendy',
+	프라임: 'Prime',
+	머스탱: 'Mustang',
+	콰트로: 'Quattro',
+	플래티넘: 'Platinum ',
+	'더 K9': 'The K9',
+	라이트: 'Light',
+	택시렌터카: 'Taxi Rental',
+	노바: 'Nova',
+	'e-트론': 'e-tron',
+	마스터즈: 'Master’s',
+	'더 마스터': 'The Master',
+	럭셔리: 'Luxury',
+	렌터카용: 'Rental',
 	인텔리전트: 'Intelligent',
 	스페셜: 'Special',
 	'더 프라임': 'The Prime',

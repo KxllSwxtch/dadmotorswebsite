@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { Slider } from '@/components/ui/slider'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 const HeroSection = () => {
 	const [priceRange, setPriceRange] = useState<number[]>([7900, 2599100])
@@ -64,13 +65,13 @@ const HeroSection = () => {
 			{/* Split background */}
 			<div className='absolute inset-0 flex -mt-[1px]'>
 				<motion.div
-					className='w-1/2 bg-red-600'
+					className='w-1/2 bg-black'
 					initial={{ x: -100, opacity: 0 }}
 					animate={{ x: 0, opacity: 1 }}
 					transition={{ duration: 0.8, ease: 'easeOut' }}
 				></motion.div>
 				<motion.div
-					className='w-1/2 bg-black'
+					className='w-1/2 bg-red-600'
 					initial={{ x: 100, opacity: 0 }}
 					animate={{ x: 0, opacity: 1 }}
 					transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -82,13 +83,13 @@ const HeroSection = () => {
 				{/* Hero headline */}
 				<div className='flex justify-center md:justify-start mt-16 md:mt-24 mb-6'>
 					<motion.h1
-						className='font-extrabold tracking-tight text-[60px] sm:text-[100px] md:text-[180px] lg:text-[220px] leading-none whitespace-nowrap overflow-hidden max-w-full'
+						className='font-extrabold tracking-tight text-[80px] xs:text-[50px] sm:text-[70px] md:text-[120px] lg:text-[180px] xl:text-[220px] leading-none overflow-hidden max-w-full text-center md:text-left'
 						initial={{ y: -50, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						transition={{ duration: 0.7, delay: 0.2 }}
 					>
 						<motion.span
-							className='text-transparent'
+							className='text-transparent inline-block'
 							style={{
 								textShadow: '0px 0px 1px rgba(255,255,255,0.2)',
 							}}
@@ -97,14 +98,13 @@ const HeroSection = () => {
 							transition={{ duration: 0.5, delay: 0.5 }}
 						>
 							D.A.D
-						</motion.span>
+						</motion.span>{' '}
 						<motion.span
-							className='text-white'
+							className='text-white inline-block'
 							initial={{ x: 50 }}
 							animate={{ x: 0 }}
 							transition={{ duration: 0.5, delay: 0.7 }}
 						>
-							{' '}
 							MOTORS
 						</motion.span>
 					</motion.h1>
@@ -112,7 +112,7 @@ const HeroSection = () => {
 
 				{/* Car Image */}
 				<motion.div
-					className='absolute left-0 right-0 top-[40%] md:top-1/2 transform -translate-y-[35%] z-20 flex justify-center pointer-events-none'
+					className='absolute left-0 right-0 top-[40%] md:top-2/3 xl:top-1/2 transform -translate-y-[35%] z-20 flex justify-center pointer-events-none'
 					initial={{ scale: 0.8, opacity: 0, y: 30 }}
 					animate={{ scale: 1, opacity: 1, y: 0 }}
 					transition={{
@@ -127,11 +127,11 @@ const HeroSection = () => {
 					}}
 				>
 					<Image
-						src='/images/homecar.webp'
+						src='https://inv.assets.sincrod.com/ChromeColorMatch/us/TRANSPARENT_cc_2025MBS231931614_01_1280_051.png'
 						alt='Luxury Car'
 						width={1300}
 						height={600}
-						className='object-contain w-[95%] md:w-[85%] max-w-[1000px]'
+						className='object-contain w-[95%] md:w-[75%] max-w-[1000px] '
 						priority
 					/>
 				</motion.div>
@@ -264,13 +264,15 @@ const HeroSection = () => {
 									delay: 2.1,
 								}}
 							>
-								<motion.button
-									className='bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors w-full cursor-pointer'
-									whileHover={{ scale: 1.05 }}
-									whileTap={{ scale: 0.95 }}
-								>
-									Поиск
-								</motion.button>
+								<Link href='/catalog' className='w-full'>
+									<motion.button
+										className='bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors w-full cursor-pointer'
+										whileHover={{ scale: 1.05 }}
+										whileTap={{ scale: 0.95 }}
+									>
+										Поиск
+									</motion.button>
+								</Link>
 							</motion.div>
 						</div>
 					</motion.div>
