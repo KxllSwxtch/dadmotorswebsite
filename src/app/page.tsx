@@ -809,7 +809,7 @@ export default function Home() {
 									}
 									transition={{ duration: 0.4, delay: 0.8 }}
 								>
-									Доставим за 2-3 месяца
+									Доставим за 1.5 месяца
 								</motion.div>
 							</motion.div>
 						</div>
