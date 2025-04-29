@@ -1,58 +1,18 @@
-'use client'
-
 import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { translations, translateSmartly } from '@/lib/translations'
-import { formatDate, transformBadgeValue } from '@/lib/utils'
-import CarCard from '@/components/catalog/CarCard'
-import Loader from '@/components/Loader'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { translations, translateSmartly } from '../translations'
+import { formatDate, transformBadgeValue } from '../utils'
+import { CarCard, Loader } from '../components'
 
-// Type definitions for the filter items
-interface FilterItem {
-	Value: string
-	Count: number
-	IsSelected?: boolean
-	Refinements?: {
-		Nodes: Array<{
-			Facets: FilterItem[]
-		}>
-	}
-	Metadata?: {
-		ModelStartDate: string[]
-		ModelEndDate: string[]
-	}
-}
-
-// Type for the event handlers
-interface SelectChangeEvent {
-	target: {
-		value: string
-	}
-}
-
-// Интерфейс для URL параметров
-interface UrlParams {
-	manufacturer: string | null
-	modelGroup: string | null
-	model: string | null
-	configuration?: string | null
-	badge?: string | null
-	badgeDetail?: string | null
-}
-
-const CatalogClient = () => {
-	const router = useRouter()
-	const searchParams = useSearchParams()
-
-	const filtersReady = useRef(true)
-	const urlParams = useRef<UrlParams>({
+const Catalog = () => {
+	const location = useLocation()
+	const navigate = useNavigate()
+	const filtersReady = useRef(false)
+	const urlParams = useRef({
 		manufacturer: null,
 		modelGroup: null,
 		model: null,
-		configuration: null,
-		badge: null,
-		badgeDetail: null,
 	})
 
 	const [sortOption, setSortOption] = useState('newest')
@@ -109,31 +69,17 @@ const CatalogClient = () => {
 	}
 
 	useEffect(() => {
-		// Get parameters directly from Next.js searchParams
-		const manufacturer = searchParams.get('manufacturer')
-		const modelGroup = searchParams.get('modelGroup')
-		const model = searchParams.get('model')
-		const configuration = searchParams.get('configuration')
-		const badge = searchParams.get('badge')
-		const badgeDetail = searchParams.get('badgeDetail')
-
+		const searchParams = new URLSearchParams(location.search)
 		urlParams.current = {
-			manufacturer,
-			modelGroup,
-			model,
-			configuration,
-			badge,
-			badgeDetail,
+			manufacturer: searchParams.get('manufacturer'),
+			modelGroup: searchParams.get('modelGroup'),
+			model: searchParams.get('model'),
 		}
 
-		// Устанавливаем значения из URL только если они есть
-		if (manufacturer) {
-			setSelectedManufacturer(manufacturer)
+		if (urlParams.current.manufacturer) {
+			setSelectedManufacturer(urlParams.current.manufacturer)
 		}
-
-		// Параметры ниже установим после загрузки соответствующих списков
-		// в соответствующих useEffect функциях
-	}, [searchParams])
+	}, [location.search])
 
 	useEffect(() => {
 		const savedFiltersRaw = localStorage.getItem('exportCatalogFilters')
@@ -233,35 +179,10 @@ const CatalogClient = () => {
 	}, [])
 
 	useEffect(() => {
-		// Запускаем первоначальную загрузку автомобилей после инициализации
 		if (filtersReady.current) {
 			fetchCars()
 		}
-	}, []) // Только при монтировании компонента
-
-	useEffect(() => {
-		if (filtersReady.current) {
-			fetchCars()
-		}
-	}, [
-		selectedManufacturer,
-		selectedModelGroup,
-		selectedModel,
-		selectedConfiguration,
-		selectedBadge,
-		selectedBadgeDetails,
-		startYear,
-		startMonth,
-		endYear,
-		endMonth,
-		mileageStart,
-		mileageEnd,
-		priceStart,
-		priceEnd,
-		searchByNumber,
-		currentPage,
-		sortOption,
-	])
+	}, [filtersReady.current])
 
 	useEffect(() => {
 		const fetchManufacturers = async () => {
@@ -379,52 +300,35 @@ const CatalogClient = () => {
 
 			const url = `https://api.encar.com/search/car/list/general?count=true&q=(And.Hidden.N._.(C.CarType.A._.(C.Manufacturer.${selectedManufacturer}._.(C.ModelGroup.${selectedModelGroup}._.Model.${selectedModel}.))))&inav=%7CMetadata%7CSort`
 
-			try {
-				const response = await axios.get(encodeURI(url))
+			const response = await axios.get(url)
 
-				const data = response?.data
-				const count = data?.Count
+			const data = response?.data
+			const count = data?.Count
 
-				setTotalCars(count)
+			setTotalCars(count)
 
-				const allManufacturers =
-					data?.iNav?.Nodes[1]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
+			const allManufacturers =
+				data?.iNav?.Nodes[1]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
 
-				const filteredManufacturer = allManufacturers.filter(
-					(item: FilterItem) => item.IsSelected === true,
-				)[0]
+			const filteredManufacturer = allManufacturers.filter(
+				(item) => item.IsSelected === true,
+			)[0]
 
-				const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
+			const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
 
-				const filteredModel = modelGroup?.filter(
-					(item: FilterItem) => item.IsSelected === true,
-				)[0]
+			const filteredModel = modelGroup?.filter(
+				(item) => item.IsSelected === true,
+			)[0]
 
-				const models = filteredModel?.Refinements?.Nodes[0]?.Facets
-				const filteredConfiguration = models?.filter(
-					(item: FilterItem) => item.IsSelected === true,
-				)[0]
+			const models = filteredModel?.Refinements?.Nodes[0]?.Facets
+			const filteredConfiguration = models?.filter(
+				(item) => item.IsSelected === true,
+			)[0]
 
-				const configurations =
-					filteredConfiguration?.Refinements?.Nodes[0]?.Facets
+			const configurations =
+				filteredConfiguration?.Refinements?.Nodes[0]?.Facets
 
-				setConfigurations(configurations)
-
-				// Устанавливаем конфигурацию из URL, если она указана
-				if (urlParams.current.configuration) {
-					const configExists = configurations?.some(
-						(config: FilterItem) =>
-							config.Value === urlParams.current.configuration,
-					)
-					if (configExists) {
-						setSelectedConfiguration(urlParams.current.configuration!)
-						// Очищаем, чтобы не применялась повторно
-						urlParams.current.configuration = null
-					}
-				}
-			} catch (error) {
-				console.error('Ошибка при загрузке конфигураций:', error)
-			}
+			setConfigurations(configurations)
 		}
 
 		fetchConfigurations()
@@ -437,56 +341,41 @@ const CatalogClient = () => {
 		const fetchBadges = async () => {
 			const url = `https://api.encar.com/search/car/list/general?count=true&q=(And.Hidden.N._.(C.CarType.A._.(C.Manufacturer.${selectedManufacturer}._.(C.ModelGroup.${selectedModelGroup}._.(C.Model.${selectedModel}._.BadgeGroup.${selectedConfiguration}.)))))&inav=%7CMetadata%7CSort`
 
-			try {
-				const response = await axios.get(encodeURI(url))
+			const response = await axios.get(url)
 
-				const data = response?.data
-				const count = data?.Count
+			const data = response?.data
+			const count = data?.Count
 
-				setTotalCars(count)
+			setTotalCars(count)
 
-				const allManufacturers =
-					data?.iNav?.Nodes[1]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
+			const allManufacturers =
+				data?.iNav?.Nodes[1]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
 
-				const filteredManufacturer = allManufacturers.filter(
-					(item: FilterItem) => item.IsSelected === true,
-				)[0]
+			const filteredManufacturer = allManufacturers.filter(
+				(item) => item.IsSelected === true,
+			)[0]
 
-				const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
+			const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
 
-				const filteredModel = modelGroup?.filter(
-					(item: FilterItem) => item.IsSelected === true,
-				)[0]
+			const filteredModel = modelGroup?.filter(
+				(item) => item.IsSelected === true,
+			)[0]
 
-				const models = filteredModel?.Refinements?.Nodes[0]?.Facets
-				const filteredConfiguration = models?.filter(
-					(item: FilterItem) => item.IsSelected === true,
-				)[0]
+			const models = filteredModel?.Refinements?.Nodes[0]?.Facets
+			const filteredConfiguration = models?.filter(
+				(item) => item.IsSelected === true,
+			)[0]
 
-				const configurations =
-					filteredConfiguration?.Refinements?.Nodes[0]?.Facets
+			const configurations =
+				filteredConfiguration?.Refinements?.Nodes[0]?.Facets
 
-				const filteredBadgeGroup = configurations?.filter(
-					(item: FilterItem) => item.IsSelected === true,
-				)[0]
+			const filteredBadgeGroup = configurations?.filter(
+				(item) => item.IsSelected === true,
+			)[0]
 
-				const badges = filteredBadgeGroup?.Refinements?.Nodes[0]?.Facets
+			const badges = filteredBadgeGroup?.Refinements?.Nodes[0]?.Facets
 
-				setBadges(badges)
-
-				// Устанавливаем badge из URL, если он указан
-				if (urlParams.current.badge) {
-					const badgeExists = badges?.some(
-						(badge: FilterItem) => badge.Value === urlParams.current.badge,
-					)
-					if (badgeExists) {
-						setSelectedBadge(urlParams.current.badge!)
-						// Не очищаем, так как нужно для загрузки badge details
-					}
-				}
-			} catch (error) {
-				console.error('Ошибка при загрузке бэджей:', error)
-			}
+			setBadges(badges)
 		}
 
 		fetchBadges()
@@ -495,6 +384,7 @@ const CatalogClient = () => {
 		selectedModelGroup,
 		selectedModel,
 		selectedConfiguration,
+		selectedBadge,
 	])
 
 	useEffect(() => {
@@ -502,17 +392,14 @@ const CatalogClient = () => {
 			if (!selectedBadge) return
 			setCurrentPage(1)
 
-			// Формируем URL без двойного кодирования
-			const badgeValue = transformBadgeValue(selectedBadge)
+			const url = `https://api.encar.com/search/car/list/general?count=true&q=(And.Hidden.N._.SellType.%EC%9D%BC%EB%B0%98._.(C.CarType.A._.(C.Manufacturer.${selectedManufacturer}._.(C.ModelGroup.${selectedModelGroup}._.(C.Model.${selectedModel}._.(C.BadgeGroup.${selectedConfiguration}._.Badge.${transformBadgeValue(
+				selectedBadge,
+			)}.))))))&inav=%7CMetadata%7CSort`
 
-			// Используем encodeURI для всего URL вместо кодирования отдельных параметров
-			const url = `https://api.encar.com/search/car/list/general?count=true&q=(And.Hidden.N._.SellType.일반._.(C.CarType.A._.(C.Manufacturer.${selectedManufacturer}._.(C.ModelGroup.${selectedModelGroup}._.(C.Model.${selectedModel}._.(C.BadgeGroup.${selectedConfiguration}._.Badge.${badgeValue}.))))))&inav=%7CMetadata%7CSort`
-
-			console.log('Raw URL:', url)
+			console.log(url)
 
 			try {
-				// Используем axios.get с encodeURI для правильного кодирования URL
-				const response = await axios.get(encodeURI(url))
+				const response = await axios.get(url)
 
 				const data = response?.data
 
@@ -524,46 +411,26 @@ const CatalogClient = () => {
 					data?.iNav?.Nodes[2]?.Facets[0]?.Refinements?.Nodes[0]?.Facets
 
 				const filteredManufacturer = allManufacturers?.find(
-					(item: FilterItem) => item.IsSelected,
+					(item) => item.IsSelected,
 				)
 				const modelGroup = filteredManufacturer?.Refinements?.Nodes[0]?.Facets
-				const filteredModel = modelGroup?.find(
-					(item: FilterItem) => item.IsSelected,
-				)
+				const filteredModel = modelGroup?.find((item) => item.IsSelected)
 
 				const models = filteredModel?.Refinements?.Nodes[0]?.Facets
-				const filteredConfiguration = models?.find(
-					(item: FilterItem) => item.IsSelected,
-				)
+				const filteredConfiguration = models?.find((item) => item.IsSelected)
 
 				const configurations =
 					filteredConfiguration?.Refinements?.Nodes[0]?.Facets
 				const filteredBadgeGroup = configurations?.find(
-					(item: FilterItem) => item.IsSelected,
+					(item) => item.IsSelected,
 				)
 
 				const badges = filteredBadgeGroup?.Refinements?.Nodes[0]?.Facets
-				const filteredBadge = badges?.find(
-					(item: FilterItem) => item.IsSelected,
-				)
+				const filteredBadge = badges?.find((item) => item.IsSelected)
 
 				const badgeDetails = filteredBadge?.Refinements?.Nodes[0]?.Facets
 
 				setBadgeDetails(badgeDetails)
-
-				// Устанавливаем badgeDetail из URL, если он указан
-				if (urlParams.current.badgeDetail) {
-					const detailExists = badgeDetails?.some(
-						(detail: FilterItem) =>
-							detail.Value === urlParams.current.badgeDetail,
-					)
-					if (detailExists) {
-						setSelectedBadgeDetails(urlParams.current.badgeDetail!)
-						// Очищаем, чтобы не применялась повторно
-						urlParams.current.badge = null
-						urlParams.current.badgeDetail = null
-					}
-				}
 			} catch (error) {
 				console.error('Ошибка при получении badgeDetails:', error)
 			}
@@ -582,8 +449,8 @@ const CatalogClient = () => {
 		setLoading(true)
 		setError('')
 
-		const queryParts = []
-		const filters = []
+		let queryParts = []
+		let filters = []
 
 		if (searchByNumber) {
 			queryParts.push(
@@ -601,9 +468,10 @@ const CatalogClient = () => {
 				selectedBadge &&
 				selectedBadgeDetails
 			) {
-				const badgeValue = transformBadgeValue(selectedBadge)
 				queryParts.push(
-					`(C.CarType.A._.(C.Manufacturer.${selectedManufacturer}._.(C.ModelGroup.${selectedModelGroup}._.(C.Model.${selectedModel}._.(C.BadgeGroup.${selectedConfiguration}._.(C.Badge.${badgeValue}._.BadgeDetail.${selectedBadgeDetails}.))))))`,
+					`(C.CarType.A._.(C.Manufacturer.${selectedManufacturer}._.(C.ModelGroup.${selectedModelGroup}._.(C.Model.${selectedModel}._.(C.BadgeGroup.${selectedConfiguration}._.(C.Badge.${transformBadgeValue(
+						selectedBadge,
+					)}._.BadgeDetail.${selectedBadgeDetails}.))))))`,
 				)
 			} else if (
 				selectedModelGroup &&
@@ -611,9 +479,10 @@ const CatalogClient = () => {
 				selectedConfiguration &&
 				selectedBadge
 			) {
-				const badgeValue = transformBadgeValue(selectedBadge)
 				queryParts.push(
-					`(C.CarType.A._.(C.Manufacturer.${selectedManufacturer}._.(C.ModelGroup.${selectedModelGroup}._.(C.Model.${selectedModel}._.(C.BadgeGroup.${selectedConfiguration}._.Badge.${badgeValue}.)))))`,
+					`(C.CarType.A._.(C.Manufacturer.${selectedManufacturer}._.(C.ModelGroup.${selectedModelGroup}._.(C.Model.${selectedModel}._.(C.BadgeGroup.${selectedConfiguration}._.Badge.${transformBadgeValue(
+						selectedBadge,
+					)}.)))))`,
 				)
 			} else if (selectedModelGroup && selectedModel && selectedConfiguration) {
 				queryParts.push(
@@ -666,21 +535,24 @@ const CatalogClient = () => {
 			filters.push(`Price.range(..${priceEnd}).`)
 		}
 
-		const query =
+		let query =
 			queryParts.join('') +
 			(filters.length ? `_.${filters.join('_.')}` : '') +
 			')'
 
+		const encodedQuery = encodeURIComponent(query)
 		const itemsPerPage = 20
 		const offset = (currentPage - 1) * itemsPerPage
 
-		const sortValue = sortOptions[sortOption]
-		const url = `https://encar-proxy.onrender.com/api/catalog?count=true&q=${query}&sr=${sortValue}|${offset}|${itemsPerPage}`
+		const url = `https://encar-proxy.onrender.com/api/catalog?count=true&q=${encodedQuery}&sr=${encodeURIComponent(
+			sortOptions[sortOption],
+		)}%7C${offset}%7C${itemsPerPage}`
 
-		console.log('Raw query URL:', url)
+		console.log('Generated q=', query)
+		console.log(url)
 
 		try {
-			const response = await axios.get(encodeURI(url))
+			const response = await axios.get(url)
 
 			if (response.data && response.data.error) {
 				console.error('Получен ответ с ошибкой:', response.data.error)
@@ -704,6 +576,30 @@ const CatalogClient = () => {
 			setLoading(false)
 		}
 	}
+
+	useEffect(() => {
+		if (filtersReady.current) {
+			fetchCars()
+		}
+	}, [
+		selectedManufacturer,
+		selectedModelGroup,
+		selectedModel,
+		selectedConfiguration,
+		selectedBadge,
+		selectedBadgeDetails,
+		startYear,
+		startMonth,
+		endYear,
+		endMonth,
+		mileageStart,
+		mileageEnd,
+		priceStart,
+		priceEnd,
+		searchByNumber,
+		currentPage,
+		sortOption,
+	])
 
 	useEffect(() => {
 		if (!selectedManufacturer) {
@@ -745,7 +641,7 @@ const CatalogClient = () => {
 		}
 	}, [selectedBadge])
 
-	const handleManufacturerChange = (e: SelectChangeEvent) => {
+	const handleManufacturerChange = (e) => {
 		const value = e.target.value
 		setSelectedModelGroup('')
 		setSelectedModel('')
@@ -756,13 +652,13 @@ const CatalogClient = () => {
 		setCurrentPage(1)
 
 		if (value) {
-			router.push(`/catalog?manufacturer=${value}`, { scroll: false })
+			navigate(`/catalog?manufacturer=${value}`)
 		} else {
-			router.push('/catalog', { scroll: false })
+			navigate('/catalog')
 		}
 	}
 
-	const handleModelGroupChange = (e: SelectChangeEvent) => {
+	const handleModelGroupChange = (e) => {
 		const value = e.target.value
 		setSelectedModel('')
 		setSelectedConfiguration('')
@@ -772,18 +668,15 @@ const CatalogClient = () => {
 		setCurrentPage(1)
 
 		if (value) {
-			router.push(
+			navigate(
 				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${value}`,
-				{ scroll: false },
 			)
 		} else {
-			router.push(`/catalog?manufacturer=${selectedManufacturer}`, {
-				scroll: false,
-			})
+			navigate(`/catalog?manufacturer=${selectedManufacturer}`)
 		}
 	}
 
-	const handleModelChange = (e: SelectChangeEvent) => {
+	const handleModelChange = (e) => {
 		const value = e.target.value
 		setSelectedConfiguration('')
 		setSelectedBadge('')
@@ -792,14 +685,12 @@ const CatalogClient = () => {
 		setCurrentPage(1)
 
 		if (value) {
-			router.push(
+			navigate(
 				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${selectedModelGroup}&model=${value}`,
-				{ scroll: false },
 			)
 		} else {
-			router.push(
+			navigate(
 				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${selectedModelGroup}`,
-				{ scroll: false },
 			)
 		}
 	}
@@ -810,18 +701,6 @@ const CatalogClient = () => {
 		setSelectedBadgeDetails('')
 		setSelectedConfiguration(value)
 		setCurrentPage(1)
-
-		if (value) {
-			router.push(
-				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${selectedModelGroup}&model=${selectedModel}&configuration=${value}`,
-				{ scroll: false },
-			)
-		} else {
-			router.push(
-				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${selectedModelGroup}&model=${selectedModel}`,
-				{ scroll: false },
-			)
-		}
 	}
 
 	const handleBadgeChange = (e) => {
@@ -829,36 +708,12 @@ const CatalogClient = () => {
 		setSelectedBadgeDetails('')
 		setSelectedBadge(value)
 		setCurrentPage(1)
-
-		if (value) {
-			router.push(
-				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${selectedModelGroup}&model=${selectedModel}&configuration=${selectedConfiguration}&badge=${value}`,
-				{ scroll: false },
-			)
-		} else {
-			router.push(
-				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${selectedModelGroup}&model=${selectedModel}&configuration=${selectedConfiguration}`,
-				{ scroll: false },
-			)
-		}
 	}
 
 	const handleBadgeDetailsChange = (e) => {
 		const value = e.target.value
 		setSelectedBadgeDetails(value)
 		setCurrentPage(1)
-
-		if (value) {
-			router.push(
-				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${selectedModelGroup}&model=${selectedModel}&configuration=${selectedConfiguration}&badge=${selectedBadge}&badgeDetail=${value}`,
-				{ scroll: false },
-			)
-		} else {
-			router.push(
-				`/catalog?manufacturer=${selectedManufacturer}&modelGroup=${selectedModelGroup}&model=${selectedModel}&configuration=${selectedConfiguration}&badge=${selectedBadge}`,
-				{ scroll: false },
-			)
-		}
 	}
 
 	return (
@@ -1199,7 +1054,7 @@ const CatalogClient = () => {
 							setPriceEnd('')
 							setSearchByNumber('')
 							setCurrentPage(1)
-							router.push('/catalog', { scroll: false })
+							navigate('/catalog')
 						}}
 					>
 						Сбросить фильтры
@@ -1290,4 +1145,4 @@ const CatalogClient = () => {
 	)
 }
 
-export default CatalogClient
+export default Catalog

@@ -28,8 +28,11 @@ export function formatDate(dateStr: string): string {
  * @param value - The badge value to transform
  * @returns Transformed badge value
  */
-export function transformBadgeValue(value: string): string {
-	// If badge value contains parentheses or other special characters
-	// this function can handle any special encoding or transformations
-	return encodeURIComponent(value)
+export const transformBadgeValue = (value: string) => {
+	if (!value) return value
+
+	// Обновляем регулярное выражение, чтобы находить все вхождения X.Y в строке,
+	// даже если после второй цифры идет буква или другой символ
+	const regex = /(\d)\.(\d)/g
+	return value.replace(regex, '$1_.$2')
 }

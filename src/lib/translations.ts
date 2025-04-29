@@ -6,6 +6,10 @@
 // Comprehensive dictionary for Korean auto terms
 /* eslint-disable no-dupe-keys */
 export const translations: Record<string, string> = {
+	스탠다드: 'Standard',
+	리미티드: 'Limited',
+	월드컵: 'World Cup',
+	일렉트리파이드: 'Electric',
 	트렌디: 'Trendy',
 	프라임: 'Prime',
 	머스탱: 'Mustang',
@@ -637,28 +641,20 @@ export const translations: Record<string, string> = {
  * @param text - The text to translate
  * @returns The translated text or original if no translation found
  */
-export function translateSmartly(text: string): string {
+export function translateSmartly(text: string) {
+	const dict = translations
 	if (!text || typeof text !== 'string') return text
 
-	// For direct matches of the entire string
-	if (translations[text]) {
-		return translations[text]
-	}
+	// Сортируем ключи по убыванию длины, чтобы сначала проверять более длинные совпадения
+	const sortedKeys = Object.keys(dict).sort((a, b) => b.length - a.length)
 
-	// For partial matches within a longer string
-	// Sort keys by descending length to check longer matches first
-	const sortedKeys = Object.keys(translations).sort(
-		(a, b) => b.length - a.length,
-	)
-
-	let result = text
 	for (const key of sortedKeys) {
-		if (result.includes(key)) {
-			result = result.replace(new RegExp(key, 'g'), translations[key])
+		if (text.includes(key)) {
+			text = text.replaceAll(key, dict[key])
 		}
 	}
 
-	return result
+	return text
 }
 
 export default translations
