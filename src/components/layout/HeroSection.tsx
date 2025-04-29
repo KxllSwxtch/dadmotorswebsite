@@ -215,24 +215,6 @@ const HeroSection = () => {
 										<span>Связаться с нами</span>
 									</motion.button>
 								</motion.div>
-
-								{/* Special offer banner */}
-								<motion.div
-									initial={{ y: 20, opacity: 0 }}
-									animate={{ y: 0, opacity: 1 }}
-									transition={{
-										duration: 0.4,
-										delay: 1.6,
-									}}
-									className='mt-4 bg-gradient-to-r from-yellow-400 to-yellow-300 p-4 rounded-lg shadow-md'
-								>
-									<p className='font-bold text-gray-800 text-center'>
-										Специальное предложение
-									</p>
-									<p className='text-gray-800 text-center text-sm mt-1'>
-										Скидка до 10% на первый заказ
-									</p>
-								</motion.div>
 							</div>
 						</motion.div>
 
