@@ -145,7 +145,7 @@ export default function Home() {
 
 			{/* YouTube Video Section */}
 			<section
-				className='py-20 relative overflow-hidden bg-gradient-to-r from-black to-red-900'
+				className='pt-70 pb-20 relative overflow-hidden bg-gradient-to-r from-black to-red-900'
 				ref={videoRef}
 			>
 				<motion.div

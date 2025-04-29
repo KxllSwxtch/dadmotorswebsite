@@ -8,6 +8,7 @@ const nextConfig = {
 			'inv.assets.sincrod.com',
 			'd3.indown.io',
 			'www.bmw.is',
+			'static.tcimg.net',
 		],
 	},
 }

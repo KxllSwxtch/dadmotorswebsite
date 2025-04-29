@@ -91,7 +91,10 @@ const HeroSection = () => {
 						<motion.span
 							className='text-transparent inline-block'
 							style={{
-								textShadow: '0px 0px 1px rgba(255,255,255,0.2)',
+								textShadow: '0px 0px 1px rgba(255,0,0,0.5)',
+								background: 'linear-gradient(to right, #ff0000, #ff3333)',
+								WebkitBackgroundClip: 'text',
+								backgroundClip: 'text',
 							}}
 							initial={{ x: -50 }}
 							animate={{ x: 0 }}
@@ -127,7 +130,7 @@ const HeroSection = () => {
 					}}
 				>
 					<Image
-						src='https://inv.assets.sincrod.com/ChromeColorMatch/us/TRANSPARENT_cc_2025MBS231931614_01_1280_051.png'
+						src='https://static.tcimg.net/vehicles/primary/30c887a55b468037/2025-Mercedes-Benz-G-Class-white-full_color-driver_side_front_quarter.png'
 						alt='Luxury Car'
 						width={1300}
 						height={600}
