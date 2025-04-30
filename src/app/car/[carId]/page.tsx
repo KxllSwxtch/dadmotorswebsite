@@ -342,12 +342,23 @@ export default function CarDetailPage({
 	useEffect(() => {
 		const fetchUsdtKrwRate = async () => {
 			try {
-				// Since the Bithumb API may not work directly from client side due to CORS,
-				// we'll use a simulated value for demonstration
-				// In a real app, this would be fetched from a backend or proxy
-				setUsdtKrwRate(1350) // Example value
+				const response = await axios.get(
+					'https://api.bithumb.com/v1/ticker?markets=KRW-USDT',
+				)
+
+				if (response.data && response.data[0] && response.data[0].trade_price) {
+					// Получаем курс из ответа API и вычитаем 20 пунктов
+					const rawRate = parseFloat(response.data[0].trade_price)
+					const adjustedRate = rawRate - 20
+
+					// Форматируем до целого числа
+					const formattedRate = Math.round(adjustedRate)
+
+					// Сохраняем в состояние
+					setUsdtKrwRate(formattedRate)
+				}
 			} catch (error) {
-				console.error('Error fetching USDT-KRW rate:', error)
+				console.error('Ошибка при получении курса USDT-KRW:', error)
 			}
 		}
 
