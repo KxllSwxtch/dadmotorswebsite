@@ -1,140 +1,249 @@
 'use client'
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import axios from 'axios'
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { createPortal } from 'react-dom'
 
-interface CarInspectionProps {
-	car: {
-		inspectionSummaries: {
-			inspectionDate: string
-			inspectionType: string
-			totalScore: number
-			exteriorScore: number
-			interiorScore: number
-			mechanicalScore: number
-			comments?: string
-		}[]
-		vehicleId: string
-	}
+// Interfaces
+interface CarProps {
+	vehicleId: string
+	vehicleNo?: string
+	[key: string]: unknown
 }
 
-const CarInspection = ({ car }: CarInspectionProps) => {
-	const [showFullReport, setShowFullReport] = useState(false)
+interface Accident {
+	date: string
+	insuranceBenefit: number
+	partCost: number
+	laborCost: number
+	paintingCost: number
+}
 
-	if (
-		!car ||
-		!car.inspectionSummaries ||
-		car.inspectionSummaries.length === 0
-	) {
-		return null
-	}
+interface InspectionData {
+	year?: string
+	maker?: string
+	carShape?: string
+	displacement?: number
+	firstDate?: string
+	myAccidentCnt: number
+	otherAccidentCnt: number
+	myAccidentCost: number
+	otherAccidentCost: number
+	ownerChangeCnt: number
+	accidentCnt: number
+	accidents: Accident[]
+}
 
-	const inspection = car.inspectionSummaries[0]
+const CarInspection = ({ car }: { car: CarProps }) => {
+	const [inspectionData, setInspectionData] = useState<InspectionData | null>(
+		null,
+	)
+	const [loading, setLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
+	const [showAllAccidents, setShowAllAccidents] = useState(false)
+
+	useEffect(() => {
+		const fetchInspectionData = async () => {
+			try {
+				if (!car?.vehicleId) {
+					setError('Нет данных об автомобиле')
+					setLoading(false)
+					return
+				}
+
+				// If vehicleNo is not available, try to fetch without it
+				const baseUrl = `https://api.encar.com/v1/readside/record/vehicle/${car.vehicleId}`
+				const url = car.vehicleNo
+					? `${baseUrl}/open?vehicleNo=${encodeURIComponent(car.vehicleNo)}`
+					: baseUrl
+
+				const response = await axios.get(url)
+
+				setInspectionData(response.data)
+				setError(null)
+			} catch (err) {
+				setError('Ошибка при загрузке данных')
+				console.error(err)
+			} finally {
+				setLoading(false)
+			}
+		}
+
+		fetchInspectionData()
+	}, [car])
+
+	if (loading)
+		return <p className='text-center text-gray-500'>Загрузка данных...</p>
+	if (error || !inspectionData)
+		return (
+			<p className='text-center text-gray-600 mt-10'>
+				Нет данных о страховых выплатах
+			</p>
+		)
+
+	const {
+		myAccidentCnt,
+		otherAccidentCnt,
+		myAccidentCost,
+		otherAccidentCost,
+		ownerChangeCnt,
+		accidentCnt,
+		accidents = [],
+	} = inspectionData
+
+	const AccidentModal = () =>
+		createPortal(
+			<AnimatePresence>
+				<motion.div
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					transition={{ duration: 0.2 }}
+					className='fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50'
+					onClick={(e) => {
+						if (e.target === e.currentTarget) {
+							setShowAllAccidents(false)
+						}
+					}}
+				>
+					<motion.div
+						initial={{ opacity: 0, scale: 0.95 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.95 }}
+						transition={{ duration: 0.3 }}
+						className='bg-white max-h-[80vh] overflow-y-auto w-full max-w-2xl p-6 rounded-lg shadow-lg relative'
+					>
+						<button
+							onClick={() => setShowAllAccidents(false)}
+							className='absolute top-3 right-3 text-gray-600 hover:text-black text-2xl'
+						>
+							&times;
+						</button>
+						<h3 className='text-xl font-bold mb-4'>Все ДТП</h3>
+						<div className='space-y-4'>
+							{accidents.map((acc, index) => (
+								<div
+									key={index}
+									className='p-4 bg-gray-100 rounded-lg border shadow'
+								>
+									<div className='grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-800'>
+										<p>
+											<strong>Дата ДТП:</strong> {acc.date}
+										</p>
+										<p>
+											<strong>Страховая выплата:</strong> ₩
+											{acc.insuranceBenefit.toLocaleString()}
+										</p>
+										<p>
+											<strong>Ремонтные работы:</strong> ₩
+											{acc.partCost.toLocaleString()}
+										</p>
+										<p>
+											<strong>Стоимость работ:</strong> ₩
+											{acc.laborCost.toLocaleString()}
+										</p>
+										<p>
+											<strong>Покраска:</strong> ₩
+											{acc.paintingCost.toLocaleString()}
+										</p>
+									</div>
+								</div>
+							))}
+						</div>
+					</motion.div>
+				</motion.div>
+			</AnimatePresence>,
+			document.body,
+		)
 
 	return (
-		<motion.div
-			className='mt-10 p-6 bg-white rounded-xl shadow-lg border border-gray-200'
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.5 }}
-		>
-			<h2 className='text-2xl font-bold mb-4 text-center'>
-				Инспекция автомобиля
-			</h2>
+		<div className='p-1 mt-4'>
+			<h2 className='text-xl font-semibold mb-4'>Страховая история</h2>
 
-			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-				<div>
-					<h3 className='text-lg font-semibold mb-3 border-b pb-2'>
-						Основная информация
-					</h3>
-					<ul className='space-y-2'>
-						<li className='flex items-start'>
-							<span className='font-medium mr-2'>Дата инспекции:</span>
-							<span>{inspection.inspectionDate}</span>
-						</li>
-						<li className='flex items-start'>
-							<span className='font-medium mr-2'>Тип инспекции:</span>
-							<span>{inspection.inspectionType}</span>
-						</li>
-						<li className='flex items-start'>
-							<span className='font-medium mr-2'>Общая оценка:</span>
-							<span
-								className={`font-semibold ${getScoreColor(
-									inspection.totalScore,
-								)}`}
-							>
-								{inspection.totalScore} / 5
-							</span>
-						</li>
-					</ul>
-				</div>
-
-				<div>
-					<h3 className='text-lg font-semibold mb-3 border-b pb-2'>
-						Детальная оценка
-					</h3>
-					<ul className='space-y-2'>
-						<li className='flex items-start'>
-							<span className='font-medium mr-2'>Внешний вид:</span>
-							<span className={getScoreColor(inspection.exteriorScore)}>
-								{inspection.exteriorScore} / 5
-							</span>
-						</li>
-						<li className='flex items-start'>
-							<span className='font-medium mr-2'>Внутреннее состояние:</span>
-							<span className={getScoreColor(inspection.interiorScore)}>
-								{inspection.interiorScore} / 5
-							</span>
-						</li>
-						<li className='flex items-start'>
-							<span className='font-medium mr-2'>Техническое состояние:</span>
-							<span className={getScoreColor(inspection.mechanicalScore)}>
-								{inspection.mechanicalScore} / 5
-							</span>
-						</li>
-					</ul>
-				</div>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+				<p className='text-gray-700'>
+					<strong>Количество владельцев:</strong> {ownerChangeCnt}
+				</p>
+				<p className='text-gray-700'>
+					<strong>Количество ДТП:</strong> {accidentCnt}
+				</p>
+				<p className='text-gray-700'>
+					<strong>Cтраховые выплаты (по этому авто):</strong> {myAccidentCnt}{' '}
+					раз
+				</p>
+				<p className='text-gray-700'>
+					<strong>Страховые выплаты (по другому авто):</strong>{' '}
+					{otherAccidentCnt} раз
+				</p>
+				<p className='text-gray-700'>
+					<strong>Общая сумма выплат (по этому авто):</strong> ₩
+					{myAccidentCost.toLocaleString()}
+				</p>
+				<p className='text-gray-700'>
+					<strong>Общая сумма выплат (по другому авто):</strong> ₩
+					{otherAccidentCost.toLocaleString()}
+				</p>
 			</div>
 
-			{inspection.comments && (
+			{/* Детализация ДТП */}
+			{accidents.length > 0 && (
 				<div className='mt-6'>
-					<h3 className='text-lg font-semibold mb-3 border-b pb-2'>
-						Комментарии инспектора
-					</h3>
-					<p className={`${showFullReport ? '' : 'line-clamp-3'}`}>
-						{inspection.comments}
-					</p>
-					{inspection.comments.length > 200 && (
-						<button
-							onClick={() => setShowFullReport(!showFullReport)}
-							className='mt-2 text-blue-600 hover:text-blue-800 font-medium'
-						>
-							{showFullReport ? 'Свернуть' : 'Читать полностью'}
-						</button>
+					<h3 className='text-lg font-semibold mb-4'>Детализация ДТП:</h3>
+
+					<div className='space-y-4'>
+						{accidents.slice(0, 3).map((acc, index) => (
+							<div
+								key={index}
+								className='p-4 bg-white border rounded-lg shadow hover:shadow-md transition'
+							>
+								<div className='grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700'>
+									<p>
+										<span className='font-black'>
+											Дата ДТП{' '}
+											<span className='text-xs font-light'>
+												(Год.Месяц.День)
+											</span>
+											:
+										</span>{' '}
+										{acc.date?.replaceAll('-', '.')}
+									</p>
+									<p>
+										<span className='font-medium'>Страховая выплата:</span> ₩
+										{acc.insuranceBenefit.toLocaleString()}
+									</p>
+									<p>
+										<span className='font-medium'>Ремонтные работы:</span> ₩
+										{acc.partCost.toLocaleString()}
+									</p>
+									<p>
+										<span className='font-medium'>Стоимость работ:</span> ₩
+										{acc.laborCost.toLocaleString()}
+									</p>
+									<p>
+										<span className='font-medium'>Покраска:</span> ₩
+										{acc.paintingCost.toLocaleString()}
+									</p>
+								</div>
+							</div>
+						))}
+					</div>
+
+					{accidents.length > 3 && (
+						<div className='mt-4 text-center'>
+							<button
+								className='px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition cursor-pointer'
+								onClick={() => setShowAllAccidents(true)}
+							>
+								Показать все ({accidents.length})
+							</button>
+						</div>
 					)}
 				</div>
 			)}
-
-			<div className='mt-6 text-center'>
-				<button
-					onClick={() =>
-						window.open(
-							`https://fem.encar.com/cars/report/inspect/${car.vehicleId}`,
-						)
-					}
-					className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors'
-				>
-					Полный отчет инспекции
-				</button>
-			</div>
-		</motion.div>
+			{showAllAccidents && <AccidentModal />}
+		</div>
 	)
-}
-
-const getScoreColor = (score: number) => {
-	if (score >= 4) return 'text-green-600'
-	if (score >= 3) return 'text-yellow-600'
-	return 'text-red-600'
 }
 
 export default CarInspection

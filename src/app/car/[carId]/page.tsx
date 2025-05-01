@@ -19,6 +19,8 @@ import { FaInstagram, FaWhatsapp, FaYoutube, FaFacebook } from 'react-icons/fa'
 import { FaTelegram } from 'react-icons/fa6'
 // Framer Motion
 import { motion } from 'framer-motion'
+// Next.js navigation
+import { notFound } from 'next/navigation'
 
 // Custom components
 import { CarInspection } from '@/components'
@@ -192,23 +194,6 @@ interface InspectionData {
 		accdient: boolean
 		simpleRepair: boolean
 	}
-}
-
-// Helper function to check if car has valid inspection summaries for the CarInspection component
-const hasValidInspections = (
-	car: CarDetails,
-): car is CarDetails & {
-	inspectionSummaries: {
-		inspectionDate: string
-		inspectionType: string
-		totalScore: number
-		exteriorScore: number
-		interiorScore: number
-		mechanicalScore: number
-		comments?: string
-	}[]
-} => {
-	return !!car.inspectionSummaries && car.inspectionSummaries.length > 0
 }
 
 export default function CarDetailPage({
@@ -508,8 +493,8 @@ export default function CarDetailPage({
 	}
 
 	if (loading) return <Loader />
-	if (error) return <p className='text-center text-red-500'>{error}</p>
-	if (!car) return <p className='text-center text-lg'>Автомобиль не найден</p>
+	if (error) return notFound()
+	if (!car) return notFound()
 
 	const sortedPhotos = car.photos?.sort((a, b) => (a.path > b.path ? 1 : -1))
 	const uniquePhotos = [
@@ -735,7 +720,10 @@ export default function CarDetailPage({
 			</div>
 
 			{/* Car inspection report */}
-			<div>{hasValidInspections(car) && <CarInspection car={car} />}</div>
+			<div>
+				{/* @ts-expect-error - Type issue with index signature */}
+				<CarInspection car={car} />
+			</div>
 
 			{/* Inspection data from Encar */}
 			{inspectionData && (
@@ -867,22 +855,24 @@ export default function CarDetailPage({
 					<div className='p-4 border rounded-lg'>
 						<h3 className='font-medium mb-2'>Телефон</h3>
 						<p className='text-gray-700'>
-							<strong>Сон Денис Олегович:</strong>{' '}
+							<strong>Сон Денис Олегович:</strong>
+							<br />
+
 							<a
 								href='tel:+821082336313'
 								className='text-blue-600 hover:underline'
 							>
-								+82 10-8233-6313
+								Звонок: +82 10-8233-6313
 							</a>
 						</p>
-						<p className='text-gray-700 mt-2'>
+						<p className='text-gray-700'>
 							<a
 								target='_blank'
 								href='https://wa.me/821082336313'
 								className='text-blue-600 hover:underline flex justify-center items-center'
 							>
 								<FaWhatsapp className='text-green-600 text-xl mr-1' />
-								+82 10-8233-6313
+								WhatsApp: +82 10-8233-6313
 							</a>
 						</p>
 					</div>
