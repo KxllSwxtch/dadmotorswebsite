@@ -6,6 +6,12 @@
 // Comprehensive dictionary for Korean auto terms
 /* eslint-disable no-dupe-keys */
 export const translations: Record<string, string> = {
+	더: 'The',
+	세이프티: 'Safety',
+	레인지: 'Range ',
+	마스터: 'Master',
+	퍼스트: 'First',
+	브롱코: 'Bronco',
 	익스페디션: 'Expedition',
 	에비뉴: 'Evi New',
 	고급형: 'Premium',
