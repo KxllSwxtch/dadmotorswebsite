@@ -11,6 +11,7 @@ const nextConfig = {
 			'static.tcimg.net',
 		],
 	},
+	// output: 'export',
 }
 
 module.exports = nextConfig
