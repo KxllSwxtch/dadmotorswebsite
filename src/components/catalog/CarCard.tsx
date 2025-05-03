@@ -2,6 +2,7 @@
 
 import { translateSmartly, translations } from '@/lib/translations'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface CarCardProps {
 	car: {
@@ -24,24 +25,30 @@ const CarCard = ({ car, usdKrwRate }: CarCardProps) => {
 	const carPriceKrw = car?.Price * 10000
 	const carPriceUsd = Math.round(carPriceKrw / usdKrwRate).toLocaleString()
 
+	const carName = `${translateSmartly(
+		car.Manufacturer ?? '',
+	)} ${translateSmartly(car.Model ?? '')} ${translateSmartly(
+		car?.Badge ?? '',
+	)} ${translateSmartly(car?.BadgeDetail ?? '')}`.trim()
+
 	return (
 		<div className='rounded-2xl shadow-xl bg-white overflow-hidden border border-gray-200 flex flex-col'>
-			{/* Оборачиваем картинку */}
+			{/* Оборачиваем картинку в div с относительным позиционированием */}
 			<div className='relative w-full h-55 md:h-40 overflow-hidden'>
-				<img
+				<Image
 					src={`https://ci.encar.com${car.Photo}001.jpg?impolicy=heightRate&rh=696&cw=1400&ch=696&cg=Center&wtmk=https://ci.encar.com/wt_mark/w_mark_04.png&t=20250401111058`}
-					alt={`${car.Manufacturer} ${car.Model}`}
-					className='object-cover object-center'
+					alt={`${carName} ${String(car.Year).slice(0, 4)} года - D.A.D Motors`}
+					width={400}
+					height={300}
+					priority
+					className='object-cover object-center w-full h-full'
 				/>
 			</div>
 
 			<div className='p-6 flex flex-col flex-grow justify-between'>
 				<div>
 					<h2 className='text-lg font-bold text-center text-gray-900 mb-4'>
-						{translateSmartly(car.Manufacturer ?? '')}{' '}
-						{translateSmartly(car.Model ?? '')}{' '}
-						{translateSmartly(car?.Badge ?? '')}{' '}
-						{translateSmartly(car?.BadgeDetail ?? '')}
+						{carName}
 					</h2>
 					<div className='text-gray-600 text-base space-y-2'>
 						<div className='flex justify-between border-b border-dotted pb-1'>
@@ -77,8 +84,7 @@ const CarCard = ({ car, usdKrwRate }: CarCardProps) => {
 
 				<Link
 					href={`/car/${car.Id}`}
-					target='_blank'
-					rel='noopener noreferrer'
+					aria-label={`Подробная информация об автомобиле ${carName}`}
 					className='mt-6 bg-black text-white font-semibold text-center py-2 rounded-md hover:bg-gray-900 transition'
 				>
 					Узнать подробнее

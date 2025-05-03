@@ -4,7 +4,16 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Phone } from 'lucide-react'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+	title: 'Страница не найдена | D.A.D Motors',
+	description: 'Страница, которую вы ищете, не существует или была перемещена.',
+	robots: {
+		index: false,
+		follow: true,
+	},
+}
 
 export default function NotFound() {
 	return (
@@ -30,8 +39,17 @@ export default function NotFound() {
 				animate={{ opacity: 1 }}
 				transition={{ delay: 0.2, duration: 0.5 }}
 			>
-				Автомобиль продан
+				404
 			</motion.h1>
+
+			<motion.h2
+				className='mb-6 text-2xl font-semibold'
+				initial={{ opacity: 0 }}
+				animate={{ opacity: 1 }}
+				transition={{ delay: 0.3, duration: 0.5 }}
+			>
+				Страница не найдена
+			</motion.h2>
 
 			<motion.p
 				className='mb-8 max-w-lg text-lg text-gray-600'
@@ -39,9 +57,8 @@ export default function NotFound() {
 				animate={{ opacity: 1 }}
 				transition={{ delay: 0.3, duration: 0.5 }}
 			>
-				К сожалению, данный автомобиль уже был продан. Наши специалисты готовы
-				помочь вам подобрать другой автомобиль, соответствующий вашим
-				требованиям и бюджету.
+				Страница, которую вы ищете, не существует или была перемещена. Возможно,
+				вы ввели неверный адрес или страница была удалена.
 			</motion.p>
 
 			<motion.div

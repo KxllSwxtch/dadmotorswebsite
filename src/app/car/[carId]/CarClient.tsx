@@ -1,6 +1,5 @@
 'use client'
 
-import { use } from 'react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 // Import Swiper properly for Next.js compatibility
@@ -196,11 +195,7 @@ interface InspectionData {
 	}
 }
 
-export default function CarClient({
-	params,
-}: {
-	params: Promise<{ carId: string }>
-}) {
+export default function CarClient({ params }: { params: { carId: string } }) {
 	const [vehicleId, setVehicleId] = useState<string | null>(null)
 	const [inspectionData, setInspectionData] = useState<InspectionData | null>(
 		null,
@@ -225,7 +220,7 @@ export default function CarClient({
 	const [calculatedResult, setCalculatedResult] =
 		useState<CalculationResult | null>(null)
 
-	const { carId } = use(params)
+	const { carId } = params
 
 	// Helper function to get the full photo URL
 	const getPhotoUrl = (path: string) =>
@@ -491,6 +486,69 @@ export default function CarClient({
 			setLoadingCalc(false)
 		}
 	}
+
+	// Structured data for the car (Schema.org)
+	useEffect(() => {
+		if (car) {
+			const structuredData = {
+				'@context': 'https://schema.org',
+				'@type': 'Vehicle',
+				name: `${car.category.manufacturerEnglishName} ${car.category.modelGroupEnglishName} ${car.category.gradeEnglishName}`,
+				manufacturer: car.category.manufacturerEnglishName,
+				model: car.category.modelGroupEnglishName,
+				modelDate: car.category.formYear,
+				vehicleIdentificationNumber: inspectionData?.master?.detail?.vin,
+				mileageFromOdometer: {
+					'@type': 'QuantitativeValue',
+					value: car.spec.mileage,
+					unitText: 'KMT',
+				},
+				color: colorTranslations[car.spec.colorName] || car.spec.colorName,
+				fuelType: translations[car.spec.fuelName] || car.spec.fuelName,
+				numberOfForwardGears: car.spec.transmissionName,
+				vehicleEngine: {
+					'@type': 'EngineSpecification',
+					engineDisplacement: {
+						'@type': 'QuantitativeValue',
+						value: car.spec.displacement,
+						unitText: 'CMQ',
+					},
+				},
+				offers: {
+					'@type': 'Offer',
+					price: car.advertisement.price,
+					priceCurrency: 'KRW',
+					availability: 'https://schema.org/InStock',
+				},
+				image:
+					car.photos && car.photos.length > 0
+						? getPhotoUrl(car.photos[0].path)
+						: null,
+			}
+
+			// Add structured data to head
+			const script = document.createElement('script')
+			script.type = 'application/ld+json'
+			script.innerHTML = JSON.stringify(structuredData)
+			script.id = 'car-structured-data'
+
+			// Remove any existing script
+			const existingScript = document.getElementById('car-structured-data')
+			if (existingScript) {
+				existingScript.remove()
+			}
+
+			document.head.appendChild(script)
+
+			// Cleanup
+			return () => {
+				const scriptToRemove = document.getElementById('car-structured-data')
+				if (scriptToRemove) {
+					scriptToRemove.remove()
+				}
+			}
+		}
+	}, [car, inspectionData])
 
 	if (loading) return <Loader />
 	if (error) return notFound()
