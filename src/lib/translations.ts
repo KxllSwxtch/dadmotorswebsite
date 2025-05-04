@@ -6,6 +6,14 @@
 // Comprehensive dictionary for Korean auto terms
 /* eslint-disable no-dupe-keys */
 export const translations: Record<string, string> = {
+	특장업체: 'Special Dealer',
+	팝: 'Pop',
+	시에나: 'Sienna',
+	일렉트릭: 'Electric',
+	퍼포먼스: 'Performance',
+	체로키: 'Cherokee',
+	어린이보호차: 'Child Safety Car',
+	클래식: 'Classic',
 	더: 'The',
 	세이프티: 'Safety',
 	레인지: 'Range ',

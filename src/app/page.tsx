@@ -211,7 +211,7 @@ export default function Home() {
 						<div className='relative pb-[56.25%] h-0'>
 							<iframe
 								className='absolute top-0 left-0 w-full h-full'
-								src='https://www.youtube.com/embed/f5O7NCIdcis?autoplay=0&rel=0'
+								src='https://www.youtube.com/embed/J4nD30gr-fc?autoplay=0&rel=0'
 								title='Цены на Авто из Кореи с Учетом Доставки и Всех Расходов в РФ'
 								allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
 								allowFullScreen

@@ -1292,7 +1292,7 @@ const CatalogClient = () => {
 				) : (
 					<div className='flex justify-center items-center h-32'>
 						<p className='text-xl font-semibold text-gray-700'>
-							{error || 'Автомобили не найдены'}
+							{error || 'Приносим свои извинения но на данный платформе нет подходящих вариантов\nНе спешите растраиваться свяжитесь с нашим менеджером он обязательно подберет автомобиль вашей мечты'}
 						</p>
 					</div>
 				)}
