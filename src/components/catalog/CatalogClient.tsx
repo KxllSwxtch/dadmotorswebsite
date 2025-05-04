@@ -217,8 +217,6 @@ const CatalogClient = () => {
 		const sortValue = sortOptions[sortOption as keyof typeof sortOptions]
 		const url = `https://encar-proxy.onrender.com/api/catalog?count=true&q=${query}&sr=${sortValue}|${offset}|${itemsPerPage}`
 
-		console.log('Raw query URL:', url)
-
 		try {
 			const response = await axios.get(encodeURI(url))
 

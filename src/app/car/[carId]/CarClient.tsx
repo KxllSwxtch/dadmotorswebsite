@@ -2,26 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-// Import Swiper properly for Next.js compatibility
 import { Swiper as SwiperClass } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/react'
-// Import Swiper modules
 import { Navigation, Pagination, Thumbs } from 'swiper/modules'
-// Swiper styles
 import 'swiper/css'
 import 'swiper/css/free-mode'
 import 'swiper/css/navigation'
 import 'swiper/css/thumbs'
 import 'swiper/css/pagination'
-// React icons - only import what's actually used
 import { FaInstagram, FaWhatsapp, FaYoutube, FaFacebook } from 'react-icons/fa'
 import { FaTelegram } from 'react-icons/fa6'
-// Framer Motion
 import { motion } from 'framer-motion'
-// Next.js navigation
 import { notFound } from 'next/navigation'
 
-// Custom components
 import { CarInspection } from '@/components'
 import Loader from '@/components/Loader'
 import { Maximize } from 'lucide-react'
@@ -245,9 +238,11 @@ export default function CarClient({ params }: { params: { carId: string } }) {
 				const response = await axios.get(
 					`https://api.encar.com/v1/readside/vehicle/${carId}`,
 				)
-
+				if (!response.data) {
+					throw new Error('Нет данных о машине')
+				}
 				setCar(response.data)
-				setVehicleId(response.data?.vehicleId)
+				setVehicleId(response.data.vehicleId)
 			} catch (err) {
 				setError('Ошибка при загрузке данных')
 				console.error(err)

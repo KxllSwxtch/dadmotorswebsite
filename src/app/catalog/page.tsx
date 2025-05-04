@@ -1,4 +1,4 @@
-'use client'
+// 'use client'
 
 import CatalogClient from '@/components/catalog/CatalogClient'
 import { Suspense } from 'react'
