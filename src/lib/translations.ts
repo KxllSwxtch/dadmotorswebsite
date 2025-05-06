@@ -1,11 +1,38 @@
-/**
- * A simple translation utility for the application
- * In a real app, this would use a proper i18n solution
- */
-
-// Comprehensive dictionary for Korean auto terms
 /* eslint-disable no-dupe-keys */
 export const translations: Record<string, string> = {
+	어코드: 'Accord',
+	이스케이프: 'Escape',
+	신형: 'New',
+	패밀리: 'Family',
+	올뉴어코드: 'All New Accord',
+	폴로: 'Polo',
+	팩: 'Pack',
+	르블랑: 'Leblanc',
+	브릴리언트: 'Brilliant',
+	블랙프리미엄: 'Black Premium',	
+	판넬밴: 'Panel Van',
+	컨버터블: 'Convertible',
+	카이엔: 'Cayenne',
+	에스컬레이드: 'Escalade',
+	에센셜: 'Essential',
+	다이나믹: 'Dynamic',
+	에어로: 'Aero',
+	스피드: 'Speed',
+	컨티넨탈: 'Continental',
+	와일드: 'Wild',
+	라이즈: 'Rise',
+	어스: 'Earth',
+	컴페티션: 'Competition',
+	클럽맨: 'Clubman',
+	램픽업: 'Ram Pickup',
+	아웃도어: 'Outdoor',
+	어드밴티지: 'Advantage',
+	이그제큐티브: 'Executive',
+	액티브: 'Active',
+	에코부스트: 'EcoBoost',
+	이보크: 'Evoque',
+	카브리올레: 'Cabriolet',
+	루비콘: 'Rubicon',
 	특장업체: 'Special Dealer',
 	팝: 'Pop',
 	시에나: 'Sienna',
